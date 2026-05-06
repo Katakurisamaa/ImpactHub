@@ -1,14 +1,7 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
 
 # testing
 /coverage
@@ -28,19 +21,26 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# local env files
 .env*.local
-.env
 
 # vercel
 .vercel
 
+# junk
+"\357\200\233/"
+google-cloud-sdk/
+*.zip
+*.sql
+*.js
+*.json
+!package.json
+!tsconfig.json
+!next.config.js
+!tailwind.config.js
+!postcss.config.js
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# agent internals
-.agent/
-.gemini/

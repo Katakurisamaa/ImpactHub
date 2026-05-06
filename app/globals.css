@@ -2,67 +2,444 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────
+   DARK MODE ONLY
+───────────────────────────────────────────── */
+:root {
+  --gold: #d4a843;
+  --gold-light: #f0c870;
+  --gold-pale: rgba(212, 168, 67, 0.15);
+  --navy: #06061a;
+  --navy-mid: #0e0e2e;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.09);
+  --text: #f0ece0;
+  --text-muted: rgba(240,236,224,0.55);
+
+  --background: 240 60% 6%; /* #06061a equivalent approx */
+  --foreground: 0 0% 100%;
+  --card: 240 60% 8%;
+  --card-foreground: 0 0% 100%;
+  --popover: 240 60% 8%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 42 63% 55%; /* Gold #d4a843 */
+  --primary-foreground: 240 60% 6%;
+  --secondary: 42 63% 55%;
+  --secondary-foreground: 240 60% 6%;
+  --muted: 240 60% 11%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 42 63% 55%;
+  --accent-foreground: 240 60% 6%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 30% 15%;
+  --input: 240 30% 15%;
+  --ring: 42 63% 55%;
+  --radius: 1rem;
+}
+
+/* ─────────────────────────────────────────────
+   BASE STYLES
+───────────────────────────────────────────── */
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+  * {
+    @apply border-white/5;
+    box-sizing: border-box;
   }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  input, select, textarea {
+    color-scheme: dark;
+  }
+
+  /* Fix for native date picker icons in dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  body {
+    @apply antialiased;
+    background-color: var(--navy);
+    color: var(--text);
+    font-family: var(--font-sans), 'Outfit', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    position: relative;
+    z-index: 10;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), 'Cormorant Garamond', serif;
+    @apply tracking-tight;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+/* ─────────────────────────────────────────────
+   GLASS & LAYOUT UTILITIES
+───────────────────────────────────────────── */
+@layer components {
+  .glass {
+    @apply backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+    background: var(--glass);
+    border: 0.5px solid var(--glass-border);
   }
-  body {
-    @apply bg-background text-foreground;
+
+  .glass-morphism {
+    @apply backdrop-blur-md shadow-2xl;
+    background: var(--glass);
+    border: 0.5px solid var(--glass-border);
   }
+
+  .glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 0.5px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 20px 60px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(212, 168, 67, 0.25);
+  }
+
+  .glass-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Navigation fixe */
+  .fixed-nav {
+    background: rgba(6, 6, 26, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid var(--glass-border);
+  }
+
+  .nav-logo {
+    font-family: var(--font-heading), 'Cormorant Garamond', serif;
+    color: var(--gold-light);
+  }
+
+  .nav-link {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    transition: color 0.3s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--gold);
+  }
+
+  /* Tags / Badges */
+  .tag-badge {
+    background: rgba(212, 168, 67, 0.12);
+    color: var(--gold);
+    border: 0.5px solid rgba(212, 168, 67, 0.3);
+    border-radius: 100px;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    display: inline-block;
+  }
+
+  /* Icônes dans cards */
+  .card-icon-container {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--gold-pale);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon-container svg {
+    stroke: var(--gold);
+    stroke-width: 1.5;
+    fill: none;
+  }
+
+  /* Titres de section */
+  .section-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-family: var(--font-heading), 'Cormorant Garamond', serif;
+    font-weight: 300;
+  }
+
+  .section-title em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  /* Diviseurs entre sections */
+  .section-divider {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09), transparent);
+    height: 0.5px;
+    width: 100%;
+    margin: 2rem 0;
+  }
+
+  /* Glows */
+  .glow-green {
+    @apply shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-shadow duration-300;
+  }
+
+  .glow-gold {
+    @apply shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)] transition-shadow duration-300;
+  }
+
+  /* Text gradients */
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-amber-400 to-amber-600;
+  }
+
+  .text-gradient-green {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-green-600;
+  }
+
+  .text-gradient-emerald {
+    background: linear-gradient(135deg, #10b981, #34d399, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-hero {
+    background: linear-gradient(180deg, #ffffff 0%, #ffffff 50%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Ambient background blobs */
+  .ambient-glow-emerald {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    filter: blur(40px);
+  }
+
+  .ambient-glow-amber {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+    filter: blur(40px);
+  }
+
+  /* Glowing top border accent */
+  .border-glow-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.6), transparent);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    color: var(--navy);
+    font-weight: 700;
+    border-radius: 0.875rem;
+    box-shadow: 0 0 20px rgba(212, 168, 67, 0.3), 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(212, 168, 67, 0.5), 0 8px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  /* Chip / Badge */
+  .chip-emerald {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #10b981;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .chip-amber {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #f59e0b;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Divider */
+  .divider-glow {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent);
+  }
+
+  /* Floating blobs animation */
+  .float-slow {
+    animation: float-slow 8s ease-in-out infinite;
+  }
+
+  .float-medium {
+    animation: float-slow 6s ease-in-out infinite reverse;
+  }
+
+  /* Glass surface */
+  .glass-surface {
+    @apply bg-slate-900/80 backdrop-blur-xl border border-white/5 shadow-2xl;
+  }
+
+  /* Scrollbars */
+  .scrollbar-styled::-webkit-scrollbar { width: 5px; }
+  .scrollbar-styled::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-styled::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 99px;
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ─────────────────────────────────────────────
+   KEYFRAMES
+───────────────────────────────────────────── */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-20px) scale(1.03); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATION UTILITIES
+───────────────────────────────────────────── */
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease both;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+
+/* Reveal Animations for Intersection Observer */
+.reveal { 
+  opacity: 0; 
+  transform: translateY(28px); 
+  transition: opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1), transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.reveal.visible { 
+  opacity: 1; 
+  transform: translateY(0); 
+}
+/* Fallback if JS takes too long or fails */
+.no-js .reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────
+   SHIMMER SKELETON
+───────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease infinite;
+  border-radius: 0.5rem;
 }

@@ -1,0 +1,12 @@
+[
+  "id",
+  "user_id",
+  "tenant_id",
+  "module_key",
+  "civility",
+  "full_name",
+  "phone",
+  "whatsapp_link",
+  "is_active",
+  "created_at"
+]

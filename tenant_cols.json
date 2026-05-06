@@ -1,0 +1,10 @@
+[
+  "id",
+  "name",
+  "slug",
+  "church_code",
+  "welcome_video_url",
+  "theme_config",
+  "created_at",
+  "created_by"
+]
