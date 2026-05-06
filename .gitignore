@@ -32,14 +32,6 @@ yarn-error.log*
 "\357\200\233/"
 google-cloud-sdk/
 *.zip
-*.sql
-*.js
-*.json
-!package.json
-!tsconfig.json
-!next.config.js
-!tailwind.config.js
-!postcss.config.js
 
 # typescript
 *.tsbuildinfo
