@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Loader2, Calendar, Heart, User, Phone, Mail, Clock, MessageSquareQuote, Droplets, CheckCircle2, MessageCircle, MoreVertical, ShieldAlert, ArrowRight, Download } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import * as XLSX from "xlsx";
 
 type Request = {
     id: string;
@@ -140,6 +141,51 @@ export default function RequestList({ moduleFilter, tenantId, subFilter, onDataC
     const [filter, setFilter] = useState(moduleFilter || 'all');
     const [sessionFilter, setSessionFilter] = useState('all');
     const [expandedId, setExpandedId] = useState<string | null>(null);
+
+    const handleExportExcel = () => {
+        if (filteredRequests.length === 0) {
+            alert("Aucune donnée à exporter");
+            return;
+        }
+
+        // Prepare data for Excel
+        const excelData = filteredRequests.map(req => {
+            const row: any = {
+                "Date": format(new Date(req.created_at), "dd/MM/yyyy HH:mm"),
+                "Type": req.type === 'appointment' ? `RDV ${req.content.appointment_type || ''}` : req.type,
+                "Statut": getStatusLabel(req.status || 'pending'),
+                "Nom": req.content.lastName || req.content.personal?.lastName || req.content.requester?.lastName || "",
+                "Prénom": req.content.firstName || req.content.personal?.firstName || req.content.requester?.firstName || "",
+                "Email": req.content.email || req.content.personal?.email || req.content.requester?.email || "",
+                "Téléphone": req.content.phone || req.content.personal?.phone || req.content.requester?.phone || "",
+            };
+
+            // Add dynamic fields based on labels
+            Object.entries(req.content).forEach(([key, value]) => {
+                const label = getLabel(key);
+                if (label && key !== 'firstName' && key !== 'lastName' && key !== 'email' && key !== 'phone') {
+                    if (Array.isArray(value)) {
+                        row[label] = value.join(", ");
+                    } else if (typeof value === 'boolean') {
+                        row[label] = value ? 'Oui' : 'Non';
+                    } else if (value && typeof value === 'object') {
+                        // Skip nested objects for now or flatten if needed
+                    } else {
+                        row[label] = value;
+                    }
+                }
+            });
+
+            return row;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Requêtes");
+        
+        const fileName = `export_${filter}_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+    };
 
     const getLabel = (key: string): string | null => {
         const labels: Record<string, string | null> = {
@@ -451,6 +497,17 @@ export default function RequestList({ moduleFilter, tenantId, subFilter, onDataC
                     </div>
                 ) : (
                     <div></div>
+                )}
+
+                {/* Excel Export Button - Only for authorized modules */}
+                {(filter === 'appointment' || filter === 'baptism' || filter === 'rdv_pastoral' || filter === 'rdv_social' || filter === 'registrations_baptism') && (
+                    <button
+                        onClick={handleExportExcel}
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 border border-emerald-500/30 transition-all font-bold text-sm shadow-lg hover:shadow-emerald-500/10"
+                    >
+                        <Download className="w-4 h-4" />
+                        Exporter Excel
+                    </button>
                 )}
             </div>
 
