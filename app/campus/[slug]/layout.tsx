@@ -3,16 +3,17 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
 type Props = {
-    params: { slug: string };
+    params: Promise<{ slug: string }>;
     children: React.ReactNode;
 };
 
 // Generate Metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params;
     const { data: tenant } = await supabase
         .from("tenants")
         .select("name")
-        .eq("slug", params.slug)
+        .eq("slug", slug)
         .single();
 
     return {
@@ -21,11 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CampusLayout({ params, children }: Props) {
+    const { slug } = await params;
     // Validate Tenant Existence
     const { data: tenant, error } = await supabase
         .from("tenants")
         .select("*")
-        .eq("slug", params.slug)
+        .eq("slug", slug)
         .single();
 
     if (error || !tenant) {

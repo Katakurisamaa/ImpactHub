@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Loader2, ArrowLeft, Users, MessageSquare, MapPin, Shield, Calendar, Mail } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 type TenantDetail = {
     id: string;
@@ -17,7 +18,9 @@ type TenantDetail = {
     manager_email?: string;
 };
 
-export default function TenantDetailPage({ params }: { params: { id: string } }) {
+export default function TenantDetailPage() {
+    const params = useParams();
+    const id = params.id as string;
     const [tenant, setTenant] = useState<TenantDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -30,7 +33,7 @@ export default function TenantDetailPage({ params }: { params: { id: string } })
                 const { data: tenantData, error: tenantError } = await supabase
                     .from('tenants')
                     .select('*')
-                    .eq('id', params.id)
+                    .eq('id', id)
                     .single();
 
                 if (tenantError) throw tenantError;
@@ -39,17 +42,17 @@ export default function TenantDetailPage({ params }: { params: { id: string } })
                 const { count: membersCount } = await supabase
                     .from('users')
                     .select('*', { count: 'exact', head: true })
-                    .eq('tenant_id', params.id);
+                    .eq('tenant_id', id);
 
                 const { count: requestsCount } = await supabase
                     .from('requests')
                     .select('*', { count: 'exact', head: true })
-                    .eq('tenant_id', params.id);
+                    .eq('tenant_id', id);
 
                 const { count: cellsCount } = await supabase
                     .from('home_cells')
                     .select('*', { count: 'exact', head: true })
-                    .eq('tenant_id', params.id);
+                    .eq('tenant_id', id);
 
                 // 3. Fetch Manager Email
                 // Complex join: tenant_admins -> users -> email
@@ -87,8 +90,8 @@ export default function TenantDetailPage({ params }: { params: { id: string } })
             }
         };
 
-        if (params.id) fetchDetails();
-    }, [params.id]);
+        if (id) fetchDetails();
+    }, [id]);
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-black"><Loader2 className="animate-spin text-gold" /></div>;
     if (error) return <div className="text-red-500 p-8">Erreur: {error}</div>;
