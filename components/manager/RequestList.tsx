@@ -143,13 +143,15 @@ export default function RequestList({ moduleFilter, tenantId, subFilter, onDataC
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const handleExportExcel = () => {
-        if (filteredRequests.length === 0) {
-            alert("Aucune donnée à exporter");
+        const pendingRequests = filteredRequests.filter(r => !r.status || r.status === 'pending');
+        
+        if (pendingRequests.length === 0) {
+            alert("Aucune nouvelle demande à traiter pour cet export.");
             return;
         }
 
         // Prepare data for Excel
-        const excelData = filteredRequests.map(req => {
+        const excelData = pendingRequests.map(req => {
             const row: any = {
                 "Date de demande": format(new Date(req.created_at), "dd/MM/yyyy HH:mm"),
                 "Module": req.type === 'appointment' ? `RDV ${req.content.appointment_type || ''}` : req.type,
