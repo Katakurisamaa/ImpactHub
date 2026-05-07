@@ -77,78 +77,6 @@ export default function BaptismLeaderView({ tenantId }: { tenantId: string }) {
         }
     };
 
-    const handleExportCsv = async () => {
-        if (!leader || !tenantId) return;
-        if (filteredRequests.length === 0) {
-            alert("Aucune donnée à exporter avec les filtres actuels.");
-            return;
-        }
-
-        setUpdating(true);
-        try {
-            // Define CSV Headers
-            const headers = [
-                "Date Inscription",
-                "Session",
-                "Statut",
-                "Genre",
-                "Nom",
-                "Prénom",
-                "Année Naissance",
-                "Email",
-                "Téléphone",
-                "Prière Salut",
-                "Demande Confirmée",
-                "Formations suivies"
-            ];
-
-            // Map data to rows
-            const rows = filteredRequests.map(req => {
-                const c = req.content || {};
-                return [
-                    new Date(req.created_at).toLocaleDateString('fr-FR'),
-                    c.sessionDate || "N/A",
-                    req.status || "pending",
-                    c.gender || "",
-                    c.lastName || "",
-                    c.firstName || "",
-                    c.birthYear || "",
-                    c.email || "",
-                    c.phone || "",
-                    c.salvationPrayer || "",
-                    c.confirmed || "",
-                    Array.isArray(c.formations) ? c.formations.join(", ") : (c.formations || "")
-                ].map(val => String(val).replace(/\t/g, " ")).join("\t");
-            });
-
-            const csvString = [headers.join("\t"), ...rows].join("\r\n");
-            
-            // Create a UTF-16LE Blob with BOM (0xFF, 0xFE)
-            // This is the most reliable format for Excel on Windows for accents + columns
-            const buffer = new ArrayBuffer(csvString.length * 2);
-            const view = new Uint16Array(buffer);
-            for (let i = 0; i < csvString.length; i++) {
-                view[i] = csvString.charCodeAt(i);
-            }
-            const bom = new Uint8Array([0xFF, 0xFE]);
-            const blob = new Blob([bom, buffer], { type: 'text/csv;charset=utf-16le;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            const fileName = `Export_Baptemes_${leader.whatsapp_link || 'Global'}_${new Date().toISOString().split('T')[0]}.csv`;
-            
-            link.setAttribute("href", url);
-            link.setAttribute("download", fileName);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (err: any) {
-            console.error("Export error:", err);
-            alert("Erreur lors de l'export.");
-        } finally {
-            setUpdating(false);
-        }
-    };
 
     if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-primary" size={32} /></div>;
 
@@ -205,14 +133,6 @@ export default function BaptismLeaderView({ tenantId }: { tenantId: string }) {
                                 </span>
                             </button>
 
-                            <button
-                                onClick={handleExportCsv}
-                                disabled={updating}
-                                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2 font-bold w-full md:w-auto"
-                            >
-                                <Download size={20} />
-                                Exporter Excel (CSV)
-                            </button>
 
                             <p className={`text-xs ${leader.is_active ? 'text-emerald-400/60' : 'text-red-400/60'}`}>
                                 {leader.is_active ? "Les membres peuvent s'inscrire." : "Les inscriptions sont fermées au public."}
