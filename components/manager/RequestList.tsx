@@ -151,25 +151,32 @@ export default function RequestList({ moduleFilter, tenantId, subFilter, onDataC
         // Prepare data for Excel
         const excelData = filteredRequests.map(req => {
             const row: any = {
-                "Date": format(new Date(req.created_at), "dd/MM/yyyy HH:mm"),
-                "Type": req.type === 'appointment' ? `RDV ${req.content.appointment_type || ''}` : req.type,
-                "Statut": getStatusLabel(req.status || 'pending'),
-                "Nom": req.content.lastName || req.content.personal?.lastName || req.content.requester?.lastName || "",
-                "Prénom": req.content.firstName || req.content.personal?.firstName || req.content.requester?.firstName || "",
-                "Email": req.content.email || req.content.personal?.email || req.content.requester?.email || "",
-                "Téléphone": req.content.phone || req.content.personal?.phone || req.content.requester?.phone || "",
+                "Date de demande": format(new Date(req.created_at), "dd/MM/yyyy HH:mm"),
+                "Module": req.type === 'appointment' ? `RDV ${req.content.appointment_type || ''}` : req.type,
+                "Statut actuel": getStatusLabel(req.status || 'pending'),
             };
 
-            // Add dynamic fields based on labels
+            // Common Identity Fields first for better Excel layout
+            const firstName = req.content.firstName || req.content.personal?.firstName || req.content.requester?.firstName || "";
+            const lastName = req.content.lastName || req.content.personal?.lastName || req.content.requester?.lastName || "";
+            const fullName = req.content.full_name || req.content.fullName || (firstName && lastName ? `${firstName} ${lastName}` : "");
+            
+            row["Nom Complet"] = fullName;
+            row["Email"] = req.content.email || req.content.personal?.email || req.content.requester?.email || "";
+            row["Téléphone"] = req.content.phone || req.content.personal?.phone || req.content.requester?.phone || "";
+
+            // Add dynamic fields based on labels, excluding already added common fields
+            const excludedKeys = ['firstName', 'lastName', 'full_name', 'fullName', 'email', 'phone', 'consent_rgpd', 'requester_key', 'timestamp', 'requester'];
+            
             Object.entries(req.content).forEach(([key, value]) => {
                 const label = getLabel(key);
-                if (label && key !== 'firstName' && key !== 'lastName' && key !== 'email' && key !== 'phone') {
+                if (label && !excludedKeys.includes(key)) {
                     if (Array.isArray(value)) {
                         row[label] = value.join(", ");
                     } else if (typeof value === 'boolean') {
                         row[label] = value ? 'Oui' : 'Non';
                     } else if (value && typeof value === 'object') {
-                        // Skip nested objects for now or flatten if needed
+                        // Skip complex nested objects to avoid Excel mess
                     } else {
                         row[label] = value;
                     }
@@ -191,44 +198,46 @@ export default function RequestList({ moduleFilter, tenantId, subFilter, onDataC
         const labels: Record<string, string | null> = {
             birthYear: "Année de naissance",
             dateOfBirth: "Date de naissance",
+            gender: "Genre / Sexe",
             address: "Adresse",
             postalCode: "Code postal",
             city: "Ville",
             role: "Rôle",
-            salvationPrayer: "Prière du salut",
-            confirmed: "Confirmation du baptême",
+            salvationPrayer: "A déjà fait la prière du salut",
+            confirmed: "Confirmation de la demande",
             details: "Détails",
             story: "Témoignage",
-            reason: "Motif",
+            reason: "Motif de la demande",
             message: "Message",
             appointment_type: "Type de RDV",
             age_range: "Tranche d'âge",
             marital_status: "Situation matrimoniale",
-            church_duration: "Durée dans l'église",
+            church_duration: "Ancienneté dans l'église",
             is_cell_member: "Membre d'une cellule",
+            formations: "Formations suivies",
+            formations_followed: "Formations S.T.A.R suivies",
             appointment_reason: "Motif du RDV",
-            had_previous_appointment: "RDV pastoral précédent",
+            had_previous_appointment: "A déjà eu un RDV pastoral",
             previous_appointment_details: "Détails RDV précédent",
             additional_notes: "Notes additionnelles",
             requested_date: "Date souhaitée",
             cell_name: "Cellule de maison",
-            sub_type: null,
-            cell_id: null,
-            requester_key: null,
-            timestamp: null,
+            subject: "Objet",
+            sessionDate: "Date de la session",
+            consent_rgpd: "Consentement RGPD",
+            // Common keys
             first_name: "Prénom",
             last_name: "Nom",
             full_name: "Nom Complet",
-            motivation: "Département & Motivations",
+            firstName: "Prénom",
+            lastName: "Nom",
+            phone: "Téléphone",
+            email: "Email",
             // STAR Specific
             civility: "Civilité",
-            lastName: "Nom",
-            firstName: "Prénom",
             familyStatus: "Situation Familiale",
-            gender: "Sexe",
             birthDate: "Date de Naissance",
             profession: "Profession",
-            formations: "Formations suivies",
             howKnown: "Comment a connu ICC",
             sinceWhen: "Fréquente ICC depuis",
             homeGroup: "En Groupe d'Impact",
@@ -237,7 +246,8 @@ export default function RequestList({ moduleFilter, tenantId, subFilter, onDataC
             pcncDetails: "Détails PCNC",
             departments: "Départements souhaités",
             comments: "Commentaires/Précisions",
-            consent: "Consentement RGPD"
+            motivation: "Motivations",
+            consent: "Consentement"
         };
         return labels[key] || null;
     };
