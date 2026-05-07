@@ -40,7 +40,7 @@ export default function WelcomeVideo({ onComplete, isReplay = false }: { onCompl
                 >
                     <video
                         ref={videoRef}
-                        src="/pp.mp4?v=2"
+                        src="/intro.mp4"
                         autoPlay
                         playsInline
                         className="absolute inset-0 w-full h-full object-cover opacity-80"
