@@ -220,7 +220,9 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
                                     <div className="space-y-2.5 mb-4">
                                         <div className="flex items-start gap-2 text-white/80">
                                             <MapPin className="text-gold shrink-0 mt-0.5" size={18} />
-                                            <span>{selectedCell.address}</span>
+                                            <span className="italic text-white/60 text-sm">
+                                                L'adresse exacte vous sera communiquée par le responsable après validation de votre demande.
+                                            </span>
                                         </div>
                                         {selectedCell.meeting_time && (
                                             <div className="flex items-center gap-2 text-white/80">
@@ -355,7 +357,7 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
                                     <div>
                                         <h4 className="text-white font-bold">{cell.name}</h4>
                                         <p className="text-xs text-white/50 mt-1 flex items-center gap-1">
-                                            <MapPin size={12} /> {cell.address.split(',')[0]}
+                                            <MapPin size={12} /> {cell.address.includes(',') ? cell.address.split(',').slice(-1)[0].trim() : "Secteur confidentiel"}
                                         </p>
                                         {cell.distance !== undefined && cell.distance < 1000 && (
                                             <p className="text-xs text-green-400 mt-1 font-bold">
