@@ -75,34 +75,35 @@ export default function PCNCView({ tenant, onSuccess }: { tenant: Tenant, onSucc
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!tenant?.id) return;
-
         setSubmitting(true);
 
-        const { error } = await supabase.from("requests").insert({
-            tenant_id: tenant.id,
-            type: "pcnc",
-            content: {
-                subject: "Nouvelle Inscription PCNC",
-                sessionDate: typeof leader !== 'string' ? leader?.session_date : undefined,
-                requester: {
-                    firstName,
-                    lastName,
-                    email,
-                    phone
+        try {
+            const { error } = await supabase.from("requests").insert({
+                tenant_id: tenant.id,
+                type: "pcnc",
+                content: {
+                    subject: "Nouvelle Inscription PCNC",
+                    sessionDate: typeof leader !== 'string' ? leader?.session_date : undefined,
+                    requester: {
+                        firstName,
+                        lastName,
+                        email,
+                        phone
+                    }
                 }
-            }
-        });
+            });
 
-        setSubmitting(false);
+            if (error) throw error;
 
-        if (error) {
-            console.error(error);
-            alert("Erreur lors de l'envoi. Veuillez réessayer.");
-        } else {
             setSuccess(true);
             setTimeout(() => {
                 if (onSuccess) onSuccess();
-            }, 2500);
+            }, 2000);
+        } catch (err) {
+            console.error("Error submitting PCNC:", err);
+            alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -127,7 +128,7 @@ export default function PCNCView({ tenant, onSuccess }: { tenant: Tenant, onSucc
                     <GraduationCap className="text-red-400" size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-white">Session fermée</h3>
-                <p className="text-white/60">
+                <p className="text-white/70">
                     Les inscriptions pour le Parcours Nouvelle Création sont fermées pour le moment. Revenez plus tard !
                 </p>
             </div>
@@ -139,13 +140,21 @@ export default function PCNCView({ tenant, onSuccess }: { tenant: Tenant, onSucc
             <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center p-8 text-center"
+                className="flex flex-col items-center justify-center p-8 text-center space-y-6"
             >
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                    <Send className="text-green-500" size={32} />
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <Send className="text-green-500" size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Inscription Réussie !</h3>
-                <p className="text-white/60">Le responsable de la formation a bien reçu votre demande et vous recontactera très vite.</p>
+                <div>
+                    <h3 className="text-xl font-bold text-white mb-2">Inscription Réussie !</h3>
+                    <p className="text-white/70">Le responsable de la formation a bien reçu votre demande et vous recontactera très vite.</p>
+                </div>
+                <button
+                    onClick={onSuccess}
+                    className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition transform active:scale-95"
+                >
+                    Fermer
+                </button>
             </motion.div>
         );
     }
@@ -163,7 +172,7 @@ export default function PCNCView({ tenant, onSuccess }: { tenant: Tenant, onSucc
                         <span className="text-sm font-semibold text-primary">Session : {leader.session_date}</span>
                     </div>
                 )}
-                <p className="text-white/60 text-sm px-4">
+                <p className="text-white/70 text-sm px-4">
                     Remplissez ce formulaire pour vous inscrire à la prochaine session de formation.
                 </p>
             </div>
@@ -171,23 +180,23 @@ export default function PCNCView({ tenant, onSuccess }: { tenant: Tenant, onSucc
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">Prénom</label>
+                        <label className="block text-sm font-medium text-white/80 mb-2">Prénom</label>
                         <input
                             type="text"
                             required
                             placeholder="Votre prénom"
-                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white transition"
+                            className="w-full p-3 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white transition placeholder:text-white/60"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">Nom</label>
+                        <label className="block text-sm font-medium text-white/80 mb-2">Nom</label>
                         <input
                             type="text"
                             required
                             placeholder="Votre nom"
-                            className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white transition"
+                            className="w-full p-3 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white transition placeholder:text-white/60"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                         />
@@ -195,26 +204,27 @@ export default function PCNCView({ tenant, onSuccess }: { tenant: Tenant, onSucc
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Email</label>
                     <input
                         type="email"
                         required
-                        placeholder="votre.email@exemple.com"
-                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white transition"
+                        placeholder="votre@email.com"
+                        className="w-full p-3 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white transition placeholder:text-white/60"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">Numéro de téléphone</label>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Téléphone</label>
                     <input
                         type="tel"
                         required
-                        placeholder="+33 6 ..."
-                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white transition"
+                        pattern="[0-9+ \-]*"
+                        placeholder="Ex: 06 12 34 56 78"
+                        className="w-full p-3 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white transition placeholder:text-white/40"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ \-]/g, ""))}
                     />
                 </div>
 

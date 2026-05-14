@@ -150,33 +150,35 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
     const handleJoinRequest = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedCell) return;
-        setSubmitting(true);
+        try {
+            const { error } = await supabase.from('requests').insert({
+                tenant_id: tenant.id,
+                type: 'home_cells',
+                status: 'pending',
+                content: {
+                    subject: `Demande d'adhésion : ${selectedCell.name}`,
+                    sub_type: 'join_request',
+                    cell_id: selectedCell.id,
+                    cell_name: selectedCell.name,
+                    first_name: joinFirstName,
+                    last_name: joinLastName,
+                    phone: joinPhone,
+                    requester_key: `${joinFirstName}_${joinLastName}`,
+                    requester: { 
+                        firstName: joinFirstName, 
+                        lastName: joinLastName 
+                    },
+                    timestamp: new Date().toISOString()
+                }
+            });
 
-        const stored = localStorage.getItem(`impact_member_${tenant.slug}`);
-        const user = stored ? JSON.parse(stored) : {};
-
-        const { error } = await supabase.from('requests').insert({
-            tenant_id: tenant.id,
-            type: 'home_cells',
-            status: 'pending',
-            content: {
-                sub_type: 'join_request',
-                cell_id: selectedCell.id,
-                cell_name: selectedCell.name,
-                first_name: joinFirstName,
-                last_name: joinLastName,
-                phone: joinPhone,
-                requester_key: `${joinFirstName}_${joinLastName}`,
-                timestamp: new Date().toISOString()
-            }
-        });
-
-        setSubmitting(false);
-
-        if (error) {
-            alert("Erreur lors de l'envoi. Veuillez réessayer.");
-        } else {
+            if (error) throw error;
             setSubmitted(true);
+        } catch (err) {
+            console.error("Error submitting join request:", err);
+            alert("Erreur lors de l'envoi. Veuillez réessayer.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -289,13 +291,14 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-white/50 mb-1">Téléphone</label>
+                                            <label className="block text-[10px] font-black uppercase tracking-widest text-white/70 mb-1 ml-1">Téléphone</label>
                                             <input
                                                 type="tel"
                                                 required
+                                                pattern="[0-9+ \-]*"
                                                 value={joinPhone}
-                                                onChange={e => setJoinPhone(e.target.value)}
-                                                className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-white text-base"
+                                                onChange={(e) => setJoinPhone(e.target.value.replace(/[^0-9+ \-]/g, ""))}
+                                                className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white text-base placeholder:text-white/40"
                                                 placeholder="06..."
                                             />
                                         </div>
@@ -332,7 +335,7 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
                             <input
                                 type="text"
                                 placeholder="Votre adresse (ex: 10 rue de la Paix, Charleroi)"
-                                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white placeholder-white/30 text-sm focus:border-gold outline-none"
+                                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white placeholder-white/40 text-sm focus:border-gold outline-none"
                                 value={userAddress}
                                 onChange={(e) => setUserAddress(e.target.value)}
                             />
@@ -352,7 +355,7 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
                                 <div
                                     key={cell.id}
                                     onClick={() => setSelectedCell(cell)}
-                                    className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-gold/30 transition cursor-pointer flex justify-between items-center group active:scale-[0.98]"
+                                    className="p-4 rounded-xl bg-white/10 border border-white/20 hover:border-gold/30 transition cursor-pointer flex justify-between items-center group active:scale-[0.98]"
                                 >
                                     <div>
                                         <h4 className="text-white font-bold">{cell.name}</h4>

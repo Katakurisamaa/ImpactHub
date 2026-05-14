@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Tenant } from "@/types";
-import { Loader2, Calendar, Heart, MessageSquareQuote, MessageCircle, Sparkles, Clock, CheckCircle2, XCircle, Droplets, Trash2, Archive } from "lucide-react";
+import { Loader2, Calendar, Heart, MessageSquareQuote, MessageCircle, Sparkles, Clock, CheckCircle2, XCircle, Droplets, Trash2, Archive, GraduationCap, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -52,13 +52,21 @@ export default function MyRequestsList({ tenant, onSuccess }: { tenant: Tenant; 
 
                 const myRequests = data.filter(r => {
                     if (!r.content) return false;
-                    const req = r.content.requester;
-                    if (typeof req === 'string') return false;
-                    if (!req) return false;
-                    return (
-                        normalize(req.firstName) === normalize(user.firstName) &&
-                        normalize(req.lastName) === normalize(user.lastName)
-                    );
+                    const content = r.content || {};
+                    const requester = content.requester || {};
+            
+                    // Check multiple potential name locations for robustness
+                    const first = requester.firstName || content.firstName || content.prenom || "";
+                    const last = requester.lastName || content.lastName || content.nom || "";
+                    const full = content.fullName || "";
+
+                    const matchesFirstLast = 
+                        normalize(first) === normalize(user.firstName) && 
+                        normalize(last) === normalize(user.lastName);
+            
+                    const matchesFull = full && normalize(full).includes(normalize(user.firstName)) && normalize(full).includes(normalize(user.lastName));
+
+                    return matchesFirstLast || matchesFull;
                 });
                 setRequests(myRequests);
             }
@@ -148,6 +156,9 @@ export default function MyRequestsList({ tenant, onSuccess }: { tenant: Tenant; 
             case 'feedback': return <MessageCircle size={18} className="text-orange-400" />;
             case 'star': return <Sparkles size={18} className="text-yellow-400" />;
             case 'baptism': return <Droplets size={18} className="text-primary" />;
+            case 'pcnc': return <GraduationCap size={18} className="text-primary" />;
+            case 'appointment': return <Calendar size={18} className="text-primary" />;
+            case 'home_cells': return <MapPin size={18} className="text-gold" />;
             default: return <Calendar size={18} className="text-primary" />;
         }
     };
@@ -156,15 +167,19 @@ export default function MyRequestsList({ tenant, onSuccess }: { tenant: Tenant; 
         switch (type) {
             case 'prayer': return 'Prière';
             case 'testimony': return 'Témoignage';
-            case 'feedback': return 'Retour';
-            case 'star': return 'Candidature STAR';
-            case 'baptism': return 'Baptême';
-            default: return 'RDV';
+            case 'feedback': return 'Retour d\'expérience';
+            case 'star': return 'Candidature S.T.A.R';
+            case 'baptism': return 'Demande de Baptême';
+            case 'pcnc': return 'Inscription Formation PCNC';
+            case 'appointment': return 'Rendez-vous';
+            case 'home_cells': return 'Cellule de maison';
+            default: return 'Demande';
         }
     };
 
     const filteredRequests = requests.filter(r => {
         if (filter === 'all') return true;
+        if (filter === 'registrations') return r.type === 'baptism' || r.type === 'pcnc';
         return r.type === filter;
     });
 
@@ -173,9 +188,10 @@ export default function MyRequestsList({ tenant, onSuccess }: { tenant: Tenant; 
         { id: 'prayer', label: 'Prière' },
         { id: 'appointment', label: 'RDV' },
         { id: 'testimony', label: 'Témoignage' },
-        { id: 'baptism', label: 'Inscriptions' },
+        { id: 'registrations', label: 'Inscriptions' },
         { id: 'feedback', label: 'Retour' },
         { id: 'star', label: 'S.T.A.R' },
+        { id: 'home_cells', label: 'Cellules' },
     ];
 
     if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-gold" /></div>;

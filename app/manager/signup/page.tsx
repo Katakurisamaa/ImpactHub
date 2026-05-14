@@ -248,7 +248,7 @@ function SignupFormContent() {
                                     className="w-full bg-black/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:border-teal-400 focus:ring-1 focus:ring-teal-400/50 outline-none transition-all appearance-none cursor-pointer relative z-0"
                                 >
                                     {availableModules.map(([key, label]) => (
-                                        <option key={key} value={key} className="bg-[#020617]">{label}</option>
+                                        <option key={key} value={key} className="bg-[#020617] text-white">{label}</option>
                                     ))}
                                 </select>
                             </div>

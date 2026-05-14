@@ -66,7 +66,7 @@ export default function ShuttleView({ tenant }: { tenant: Tenant }) {
 
             <div>
                 <h3 className="text-xl font-bold text-white mb-2">Service Navette</h3>
-                <p className="text-white/60 text-sm px-4 mb-4">
+                <p className="text-white/70 text-sm px-4 mb-4">
                     Service de navette disponible pour les cultes du Dimanche.
                 </p>
             </div>

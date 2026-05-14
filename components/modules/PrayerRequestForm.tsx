@@ -60,28 +60,30 @@ export default function PrayerRequestForm({ tenant, onSuccess }: { tenant: Tenan
         // If strict member_id is needed, we'd need a real 'members' record.
         // Let's assume for this MVP we store data in content.
 
-        const { error } = await supabase.from("requests").insert({
-            tenant_id: tenant.id,
-            // member_id: ... // We'll skip relations for soft-auth for now to avoid complexity unless user created one
-            type: "prayer",
-            content: {
-                subject,
-                details: content,
-                is_anonymous: isAnonymous,
-                consent_rgpd: consent,
-                requester: isAnonymous ? "Anonyme" : { firstName: user?.firstName, lastName: user?.lastName }
-            }
-        });
+        try {
+            const { error } = await supabase.from("requests").insert({
+                tenant_id: tenant.id,
+                type: "prayer",
+                content: {
+                    subject,
+                    details: content,
+                    is_anonymous: isAnonymous,
+                    consent_rgpd: consent,
+                    requester: isAnonymous ? "Anonyme" : { firstName: user?.firstName, lastName: user?.lastName }
+                }
+            });
 
-        setLoading(false);
+            if (error) throw error;
 
-        if (error) {
-            alert("Erreur lors de l'envoi. Veuillez réessayer.");
-        } else {
             setSuccess(true);
             setTimeout(() => {
                 onSuccess();
             }, 2000);
+        } catch (err) {
+            console.error("Error submitting prayer:", err);
+            alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -101,13 +103,21 @@ export default function PrayerRequestForm({ tenant, onSuccess }: { tenant: Tenan
             <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center p-8 text-center"
+                className="flex flex-col items-center justify-center p-8 text-center space-y-6"
             >
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                    <Send className="text-green-500" size={32} />
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <Send className="text-green-500" size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">Reçu 5/5 !</h3>
-                <p className="text-white/60">Ton sujet est entre de bonnes mains.</p>
+                <div>
+                    <h3 className="text-xl font-bold text-white mb-2">Reçu 5/5 !</h3>
+                    <p className="text-white/70">Ton sujet est entre de bonnes mains.</p>
+                </div>
+                <button
+                    onClick={onSuccess}
+                    className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition transform active:scale-95"
+                >
+                    Fermer
+                </button>
             </motion.div>
         );
     }
@@ -115,24 +125,24 @@ export default function PrayerRequestForm({ tenant, onSuccess }: { tenant: Tenan
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Sujet</label>
+                <label className="block text-sm font-medium text-white/80 mb-2">Sujet</label>
                 <input
                     type="text"
                     required
                     placeholder="Ex: Santé, Famille, Examen..."
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white transition"
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white transition placeholder:text-white/60"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Détails</label>
+                <label className="block text-sm font-medium text-white/80 mb-2">Détails</label>
                 <textarea
                     required
                     rows={4}
                     placeholder="Partage-nous ce que tu as sur le cœur..."
-                    className="w-full p-3 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white transition resize-none"
+                    className="w-full p-3 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white transition resize-none placeholder:text-white/60"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                 />
@@ -175,7 +185,7 @@ export default function PrayerRequestForm({ tenant, onSuccess }: { tenant: Tenan
                             <p className="text-sm font-medium text-white/80 leading-snug">
                                 Consentement RGPD <span className="text-[var(--gold)]">*</span>
                             </p>
-                            <p className="text-xs text-white/40 leading-relaxed">
+                            <p className="text-xs text-white/60 leading-relaxed">
                                 J'accepte que mes données personnelles soient collectées et traitées par Impact Centre Chrétien dans le cadre de ma demande de prière.
                             </p>
                         </div>

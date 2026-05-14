@@ -28,10 +28,10 @@ const APPOINTMENT_REASONS = [
 ];
 
 const inputClass =
-    "w-full py-3.5 px-4 rounded-xl bg-[#0d1117] border border-white/10 focus:border-primary outline-none text-white text-base transition-all placeholder:text-white/20";
-const labelClass = "block text-[10px] font-black uppercase tracking-widest text-white/40 mb-1.5 ml-1";
+    "w-full py-3.5 px-4 rounded-xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white text-base transition-all placeholder:text-white/60";
+const labelClass = "block text-[10px] font-black uppercase tracking-widest text-white/80 mb-1.5 ml-1";
 const selectClass =
-    "w-full py-3.5 px-4 rounded-xl bg-[#0d1117] border border-white/10 focus:border-primary outline-none text-white text-base transition shadow-inner [color-scheme:dark]";
+    "w-full py-3.5 px-4 rounded-xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white text-base transition shadow-inner [color-scheme:dark]";
 
 interface LeaderStatus {
     pastoral: 'open' | 'closed' | 'not_found' | 'loading';
@@ -100,52 +100,59 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
         }
         setLoading(true);
 
-        const content: any = {
-            appointment_type: type,
-            full_name: fullName,
-            phone: phone,
-        };
+        try {
+            const stored = localStorage.getItem(`impact_member_${tenant.slug}`);
+            const user = stored ? JSON.parse(stored) : null;
 
-        if (type === "pastoral") {
-            Object.assign(content, {
-                email,
-                gender,
-                age_range: ageRange,
-                marital_status: maritalStatus,
-                church_duration: churchDuration,
-                is_cell_member: isCellMember,
-                formations_followed: formations,
-                appointment_reason: appointmentReason === "Autre" ? otherReason : appointmentReason,
-                had_previous_appointment: hadPreviousAppointment,
-                previous_appointment_details: hadPreviousAppointment === "oui" ? previousAppointmentDetails : "",
-                requested_date: date,
-                additional_notes: additionalNotes,
-            });
-        } else {
-            Object.assign(content, {
-                reason: socialReason,
-                subject: "Demande RDV Social",
-            });
-        }
+            const content: any = {
+                appointment_type: type,
+                full_name: fullName,
+                phone: phone,
+                subject: type === "pastoral" ? "Demande RDV Pastoral" : "Demande RDV Social",
+                requester: user ? { firstName: user.firstName, lastName: user.lastName } : { firstName: fullName.split(' ')[0], lastName: fullName.split(' ').slice(1).join(' ') }
+            };
 
-        const { error } = await supabase.from("requests").insert({
-            tenant_id: tenant.id,
-            type: "appointment",
-            content: {
-                ...content,
-                consent_rgpd: consent,
+            if (type === "pastoral") {
+                Object.assign(content, {
+                    email,
+                    gender,
+                    age_range: ageRange,
+                    marital_status: maritalStatus,
+                    church_duration: churchDuration,
+                    is_cell_member: isCellMember,
+                    formations_followed: formations,
+                    appointment_reason: appointmentReason === "Autre" ? otherReason : appointmentReason,
+                    had_previous_appointment: hadPreviousAppointment,
+                    previous_appointment_details: hadPreviousAppointment === "oui" ? previousAppointmentDetails : "",
+                    requested_date: date,
+                    additional_notes: additionalNotes,
+                });
+            } else {
+                Object.assign(content, {
+                    reason: socialReason,
+                });
             }
-        });
 
-        setLoading(false);
+            const { error } = await supabase.from("requests").insert({
+                tenant_id: tenant.id,
+                type: "appointment",
+                content: {
+                    ...content,
+                    consent_rgpd: consent,
+                }
+            });
 
-        if (error) {
-            alert("Erreur lors de la demande. Veuillez réessayer.");
-        } else {
+            if (error) throw error;
+
             setSuccess(true);
             setTimeout(() => {
                 onSuccess();
-            }, 2500);
+            }, 2000);
+        } catch (err) {
+            console.error("Error submitting appointment:", err);
+            alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -154,17 +161,23 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="flex flex-col items-center justify-center p-12 text-center space-y-4"
+                className="flex flex-col items-center justify-center p-12 text-center space-y-6"
             >
-                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center mb-2 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.1)]">
                     <CheckCircle2 className="text-emerald-400" size={40} />
                 </div>
                 <div>
                     <h3 className="text-2xl font-black text-white mb-2 italic uppercase tracking-tight">Demande envoyée !</h3>
-                    <p className="text-white/40 text-sm max-w-[240px] leading-relaxed">
+                    <p className="text-white/70 text-sm max-w-[240px] leading-relaxed">
                         Ta demande de rendez-vous {type} a bien été transmise. Nous reviendrons vers toi très vite !
                     </p>
                 </div>
+                <button
+                    onClick={onSuccess}
+                    className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition transform active:scale-95"
+                >
+                    Fermer
+                </button>
             </motion.div>
         );
     }
@@ -185,14 +198,14 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                     <button
                         type="button"
                         onClick={() => setType("pastoral")}
-                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'pastoral' ? 'text-white' : 'text-white/30 hover:text-white/50'}`}
+                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'pastoral' ? 'text-white' : 'text-white/70 hover:text-white'}`}
                     >
                         Pastoral
                     </button>
                     <button
                         type="button"
                         onClick={() => setType("social")}
-                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'social' ? 'text-white' : 'text-white/30 hover:text-white/50'}`}
+                        className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'social' ? 'text-white' : 'text-white/70 hover:text-white'}`}
                     >
                         Social
                     </button>
@@ -219,14 +232,14 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                 <button
                     type="button"
                     onClick={() => setType("pastoral")}
-                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'pastoral' ? 'text-white' : 'text-white/30 hover:text-white/50'}`}
+                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'pastoral' ? 'text-white' : 'text-white/60 hover:text-white/80'}`}
                 >
                     Pastoral
                 </button>
                 <button
                     type="button"
                     onClick={() => setType("social")}
-                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'social' ? 'text-white' : 'text-white/30 hover:text-white/50'}`}
+                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 relative z-10 ${type === 'social' ? 'text-white' : 'text-white/60 hover:text-white/80'}`}
                 >
                     Social
                 </button>
@@ -263,9 +276,10 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                             <input
                                 type="tel"
                                 required
+                                pattern="[0-9+ \-]*"
                                 className={`${inputClass} pl-11`}
                                 value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
+                                onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ \-]/g, ""))}
                                 placeholder="06..."
                             />
                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-primary transition-colors" size={18} />
@@ -328,7 +342,7 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                                             onClick={() => setGender(g)}
                                             className={`py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${gender === g
                                                 ? "bg-primary/10 border-primary text-white shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
-                                                : "bg-white/[0.02] border-white/5 text-white/30 hover:border-white/20"
+                                                : "bg-white/[0.05] border-white/20 text-white/70 hover:border-white/40 hover:text-white"
                                                 }`}
                                         >
                                             {g}
@@ -342,15 +356,15 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                                 <div className="space-y-1.5">
                                     <label className={labelClass}>Tranche d'âge</label>
                                     <select required className={selectClass} value={ageRange} onChange={(e) => setAgeRange(e.target.value)}>
-                                        <option value="" disabled>Choisir...</option>
-                                        {AGE_RANGES.map((range) => <option key={range} value={range}>{range}</option>)}
+                                        <option value="" disabled className="bg-slate-900 text-white">Choisir...</option>
+                                        {AGE_RANGES.map((range) => <option key={range} value={range} className="bg-slate-900 text-white">{range}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className={labelClass}>Situation</label>
                                     <select required className={selectClass} value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)}>
-                                        <option value="" disabled>Choisir...</option>
-                                        {MARITAL_STATUSES.map((status) => <option key={status} value={status}>{status}</option>)}
+                                        <option value="" disabled className="bg-slate-900 text-white">Choisir...</option>
+                                        {MARITAL_STATUSES.map((status) => <option key={status} value={status} className="bg-slate-900 text-white">{status}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -358,8 +372,8 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                             <div className="space-y-1.5">
                                 <label className={labelClass}>Ancienneté dans l&apos;église</label>
                                 <select required className={selectClass} value={churchDuration} onChange={(e) => setChurchDuration(e.target.value)}>
-                                    <option value="" disabled>Sélectionnez la durée</option>
-                                    {CHURCH_DURATIONS.map((duration) => <option key={duration} value={duration}>{duration}</option>)}
+                                    <option value="" disabled className="bg-slate-900 text-white">Sélectionnez la durée</option>
+                                    {CHURCH_DURATIONS.map((duration) => <option key={duration} value={duration} className="bg-slate-900 text-white">{duration}</option>)}
                                 </select>
                             </div>
 
@@ -373,7 +387,7 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                                             onClick={() => setIsCellMember(val)}
                                             className={`py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${isCellMember === val
                                                 ? "bg-primary/10 border-primary text-white shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
-                                                : "bg-white/[0.02] border-white/5 text-white/30 hover:border-white/20"
+                                                : "bg-white/[0.05] border-white/20 text-white/70 hover:border-white/40 hover:text-white"
                                                 }`}
                                         >
                                             {val}
@@ -391,16 +405,16 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                                     value={formations}
                                     onChange={(e) => setFormations(e.target.value)}
                                 >
-                                    <option value="" disabled>Choisir la dernière formation...</option>
-                                    {FORMATIONS_LIST.map((f) => <option key={f} value={f}>{f}</option>)}
+                                    <option value="" disabled className="bg-slate-900 text-white">Choisir la dernière formation...</option>
+                                    {FORMATIONS_LIST.map((f) => <option key={f} value={f} className="bg-slate-900 text-white">{f}</option>)}
                                 </select>
                             </div>
 
                             <div className="space-y-1.5">
                                 <label className={labelClass}>Motif du rendez-vous</label>
                                 <select required className={selectClass} value={appointmentReason} onChange={(e) => setAppointmentReason(e.target.value)}>
-                                    <option value="" disabled>Sélectionnez le motif</option>
-                                    {APPOINTMENT_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                                    <option value="" disabled className="bg-slate-900 text-white">Sélectionnez le motif</option>
+                                    {APPOINTMENT_REASONS.map((r) => <option key={r} value={r} className="bg-slate-900 text-white">{r}</option>)}
                                 </select>
                                 {appointmentReason === "Autre" && (
                                     <input
@@ -424,7 +438,7 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                                             onClick={() => setHadPreviousAppointment(val)}
                                             className={`py-3 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${hadPreviousAppointment === val
                                                 ? "bg-primary/10 border-primary text-white shadow-[0_0_15px_rgba(var(--primary-rgb),0.1)]"
-                                                : "bg-white/[0.02] border-white/5 text-white/30 hover:border-white/20"
+                                                : "bg-white/[0.05] border-white/20 text-white/70 hover:border-white/40 hover:text-white"
                                                 }`}
                                         >
                                             {val}
@@ -490,8 +504,8 @@ export default function AppointmentForm({ tenant, onSuccess }: { tenant: Tenant;
                         <p className="text-sm font-medium text-white/80 leading-snug">
                             Consentement RGPD <span className="text-[var(--gold)]">*</span>
                         </p>
-                        <p className="text-xs text-white/40 leading-relaxed">
-                            J'accepte que mes données personnelles soient collectées et traitées par Impact Centre Chrétien dans le cadre de ma demande de rendez-vous. Pour en savoir plus, consultez notre politique de confidentialité.
+                        <p className="text-xs text-white/60 leading-relaxed">
+                            J&apos;accepte que mes données personnelles soient collectées et traitées par Impact Centre Chrétien dans le cadre de ma demande de rendez-vous. Pour en savoir plus, consultez notre politique de confidentialité.
                         </p>
                     </div>
                 </label>

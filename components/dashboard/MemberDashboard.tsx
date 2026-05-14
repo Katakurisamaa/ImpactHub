@@ -13,17 +13,17 @@ import Shell from "@/components/layout/Shell";
 
 // Modules Definition
 const MODULES_DEF = [
-    { id: 'appointments', label: 'RDV', icon: Calendar, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
-    { id: 'registrations', label: 'Inscriptions', icon: ClipboardList, color: 'from-accent-success/20 to-accent-success/10', border: 'border-accent-success/20' },
-    { id: 'home_cells', label: 'Cellules de maison', icon: MapPin, color: 'from-gold-500/20 to-gold-600/10', border: 'border-gold-500/20' },
-    { id: 'shuttle', label: 'Navette', icon: Bus, color: 'from-gold-400/20 to-gold-500/10', border: 'border-gold-400/20' },
-    { id: 'prayer', label: 'Prière', icon: Heart, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
-    { id: 'testimonies', label: 'Témoignages', icon: MessageSquareQuote, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
-    { id: 'feedback', label: 'Retour', icon: MessageCircle, color: 'from-accent-success/20 to-accent-success/10', border: 'border-accent-success/20' },
-    { id: 'star', label: 'Devenir S.T.A.R', icon: Sparkles, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
-    { id: 'women_impact', label: "Femmes d'Impact", icon: Users2, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
-    { id: 'men_impact', label: "Hommes d'Impact", icon: UserCheck, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
-    { id: 'church_group', label: "Groupe de l'Église", icon: Church, color: 'from-gold-500/20 to-gold-600/10', border: 'border-gold-500/20' },
+    { id: 'appointments', label: 'RDV', description: 'Pastoral & Social', icon: Calendar, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
+    { id: 'registrations', label: 'Inscriptions', description: 'Baptême & PCNC', icon: ClipboardList, color: 'from-accent-success/20 to-accent-success/10', border: 'border-accent-success/20' },
+    { id: 'home_cells', label: 'Cellules de maison', description: 'Trouver une cellule', icon: MapPin, color: 'from-gold-500/20 to-gold-600/10', border: 'border-gold-500/20' },
+    { id: 'shuttle', label: 'Navette', description: 'Transport cultes', icon: Bus, color: 'from-gold-400/20 to-gold-500/10', border: 'border-gold-400/20' },
+    { id: 'prayer', label: 'Prière', description: 'Partager un sujet', icon: Heart, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
+    { id: 'testimonies', label: 'Témoignages', description: 'Partager un miracle', icon: MessageSquareQuote, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
+    { id: 'feedback', label: 'Retour', description: 'Donner votre avis', icon: MessageCircle, color: 'from-accent-success/20 to-accent-success/10', border: 'border-accent-success/20' },
+    { id: 'star', label: 'Devenir S.T.A.R', description: 'Rejoindre une équipe', icon: Sparkles, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
+    { id: 'women_impact', label: "Femmes d'Impact", description: 'Groupe WhatsApp', icon: Users2, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
+    { id: 'men_impact', label: "Hommes d'Impact", description: 'Groupe WhatsApp', icon: UserCheck, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
+    { id: 'church_group', label: "Groupe de l'Église", description: 'Toute l\'actualité', icon: Church, color: 'from-gold-500/20 to-gold-600/10', border: 'border-gold-500/20' },
 ];
 
 // Import forms (Lazy load or direct)
@@ -139,9 +139,18 @@ export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Ten
                             <div className="p-3 rounded-2xl bg-white/10 text-white group-hover:bg-white/20 transition-colors">
                                 <module.icon size={22} />
                             </div>
-                            <div className="relative z-10 w-full flex justify-between items-end gap-2 text-left">
-                                <span className="font-bold text-white text-sm md:text-lg tracking-wide leading-tight">{module.label}</span>
-                                <ChevronRight size={16} className="text-white/40 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
+                            <div className="relative z-10 w-full text-left">
+                                <div className="flex justify-between items-start gap-2">
+                                    <div className="flex-1">
+                                        <span className="font-bold text-white text-sm md:text-lg tracking-wide leading-tight block">{module.label}</span>
+                                        {module.description && (
+                                            <span className="text-[10px] md:text-xs text-white/50 block mt-1 line-clamp-1">
+                                                {module.description}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <ChevronRight size={16} className="text-white/40 mt-1 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
+                                </div>
                             </div>
                         </motion.button>
                     ))}

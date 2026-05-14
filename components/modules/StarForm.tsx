@@ -143,6 +143,7 @@ export default function StarForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!tenant?.id) return;
+        setLoading(true);
 
         if (!applicant.consent) {
             alert("Veuillez accepter les conditions RGPD.");
@@ -154,23 +155,27 @@ export default function StarForm({
             return;
         }
         
-        setLoading(true);
+        try {
+            const { error } = await supabase.from("requests").insert({
+                tenant_id: tenant.id,
+                type: "star",
+                content: {
+                    subject: "Nouvelle Candidature S.T.A.R",
+                    ...applicant,
+                    requester: { 
+                        firstName: applicant.firstName, 
+                        lastName: applicant.lastName 
+                    }
+                },
+            });
 
-        const { error } = await supabase.from("requests").insert({
-            tenant_id: tenant.id,
-            type: "star",
-            content: {
-                subject: "Nouvelle Candidature S.T.A.R",
-                ...applicant
-            },
-        });
-
-        setLoading(false);
-
-        if (error) {
-            alert("Erreur lors de l'envoi. Veuillez réessayer.");
-        } else {
+            if (error) throw error;
             setSuccess(true);
+        } catch (err) {
+            console.error("Error submitting STAR form:", err);
+            alert("Erreur lors de l'envoi. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -203,7 +208,7 @@ export default function StarForm({
                 
                 <div>
                     <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Candidature Envoyée !</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                    <p className="text-white/70 text-sm leading-relaxed max-w-xs mx-auto">
                         Votre désir de servir a bien été transmis. Le responsable de l'intégration S.T.A.R reviendra vers vous très prochainement.
                     </p>
                 </div>
@@ -225,7 +230,7 @@ export default function StarForm({
                     <Sparkles size={32} className="text-primary" />
                 </div>
                 <h3 className="text-2xl font-black text-white tracking-tight">Fiche de Candidature S.T.A.R</h3>
-                <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">
+                <p className="text-xs text-white/60 font-medium uppercase tracking-widest mt-1">
                     Serviteur Travaillant Activement pour le Royaume
                 </p>
             </div>
@@ -294,9 +299,10 @@ export default function StarForm({
                         <FormInput 
                             label="Téléphone / GSM *" 
                             type="tel"
+                            pattern="[0-9+ \-]*"
                             icon={<Phone size={18} />}
                             value={applicant.phone}
-                            onChange={(v) => handleUpdateField("phone", v)}
+                            onChange={(v) => handleUpdateField("phone", v.replace(/[^0-9+ \-]/g, ""))}
                         />
                     </div>
 
@@ -335,7 +341,7 @@ export default function StarForm({
                     />
 
                     <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Formations suivies</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">Formations suivies</label>
                         <div className="flex flex-wrap gap-2">
                             <CheckboxBadge 
                                 label="Aucune"
@@ -404,7 +410,7 @@ export default function StarForm({
                         />
                         {applicant.pcncFollowed === "OUI" && (
                             <div className="space-y-3 p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Lesquelles :</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-white/60">Lesquelles :</label>
                                 <div className="flex flex-wrap gap-2">
                                     <CheckboxBadge 
                                         label="Aucune"
@@ -437,7 +443,7 @@ export default function StarForm({
                     <div className="space-y-6">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">
                                     Départements souhaités * (Max 2)
                                 </label>
                                 <span className="text-[10px] text-primary font-bold">{applicant.departments.length}/2</span>
@@ -457,12 +463,12 @@ export default function StarForm({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Commentaires ou précisions</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-1">Commentaires ou précisions</label>
                             <textarea
                                 required
                                 placeholder="Toute information complémentaire..."
                                 rows={3}
-                                className="w-full p-4 rounded-2xl bg-[#0a0f1c]/60 border border-white/5 focus:border-primary outline-none text-white placeholder:text-slate-600 transition-all resize-none text-sm"
+                                className="w-full p-4 rounded-2xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white placeholder:text-white/60 transition-all resize-none text-sm"
                                 value={applicant.comments}
                                 onChange={(e) => handleUpdateField("comments", e.target.value)}
                             />
@@ -472,8 +478,8 @@ export default function StarForm({
 
                 {/* SECTION 4: RGPD */}
                 <div className="pt-10 border-t border-white/5">
-                    <label className="flex items-start gap-4 p-4 rounded-2xl bg-[#0d1117] border border-white/5 cursor-pointer hover:bg-white/[0.04] transition-all group">
-                        <div className={`mt-1 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${applicant.consent ? 'bg-[var(--gold)] border-[var(--gold)]' : 'border-white/10 group-hover:border-[var(--gold)]/50'}`}>
+                    <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/20 cursor-pointer hover:bg-white/[0.08] transition-all group">
+                        <div className={`mt-1 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${applicant.consent ? 'bg-[var(--gold)] border-[var(--gold)]' : 'border-white/20 group-hover:border-[var(--gold)]/50'}`}>
                             <AnimatePresence>
                                 {applicant.consent && (
                                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
@@ -488,10 +494,10 @@ export default function StarForm({
                             checked={applicant.consent}
                             onChange={(e) => handleUpdateField("consent", e.target.checked)}
                         />
-                        <div className="text-[11px] text-slate-400 leading-relaxed">
-                            <p className="font-bold text-slate-300 mb-1">Consentement RGPD *</p>
-                            J'accepte le traitement de mes données par ICC, l'autorisation de prise et diffusion d'images, 
-                            et l'acceptation de recevoir des informations de l'église.
+                        <div className="text-[11px] text-white/60 leading-relaxed">
+                            <p className="font-bold text-white/80 mb-1">Consentement RGPD *</p>
+                            J&apos;accepte le traitement de mes données par ICC, l&apos;autorisation de prise et diffusion d&apos;images, 
+                            et l&apos;acceptation de recevoir des informations de l&apos;église.
                         </div>
                     </label>
                 </div>
@@ -514,7 +520,7 @@ export default function StarForm({
     );
 }
 
-function FormInput({ label, type = "text", placeholder = "", value, onChange, icon, required = true }: {
+function FormInput({ label, type = "text", placeholder = "", value, onChange, icon, required = true, pattern }: {
     label: string;
     type?: string;
     placeholder?: string;
@@ -522,16 +528,18 @@ function FormInput({ label, type = "text", placeholder = "", value, onChange, ic
     onChange: (v: string) => void;
     icon?: React.ReactNode;
     required?: boolean;
+    pattern?: string;
 }) {
     return (
         <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">{label}</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-white/80 ml-1">{label}</label>
             <div className="relative group">
                 <input
                     type={type}
                     required={required}
+                    pattern={pattern}
                     placeholder={placeholder}
-                    className="w-full py-4 px-4 pl-12 rounded-2xl bg-[#0a0f1c]/60 border border-white/5 focus:border-primary outline-none text-white placeholder:text-slate-600 transition-all text-sm"
+                    className="w-full py-4 px-4 pl-12 rounded-2xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white placeholder:text-white/60 transition-all text-sm"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                 />
@@ -552,16 +560,16 @@ function FormSelect({ label, options, value, onChange, required = true }: {
 }) {
     return (
         <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">{label}</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-white/80 ml-1">{label}</label>
             <select
                 required={required}
-                className="w-full py-4 px-4 rounded-2xl bg-[#0a0f1c]/60 border border-white/5 focus:border-primary outline-none text-white transition-all text-sm appearance-none cursor-pointer"
+                className="w-full py-4 px-4 rounded-2xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white transition-all text-sm appearance-none cursor-pointer"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
             >
-                <option value="" disabled>Sélectionner...</option>
+                <option value="" disabled className="bg-slate-900 text-white">Sélectionner...</option>
                 {options.map((o: string) => (
-                    <option key={o} value={o} className="bg-[#0f172a]">{o}</option>
+                    <option key={o} value={o} className="bg-slate-900 text-white">{o}</option>
                 ))}
             </select>
         </div>
@@ -582,7 +590,7 @@ function CheckboxBadge({ label, checked, onToggle, disabled }: {
             className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                 checked 
                 ? 'bg-[var(--gold)] border-[var(--gold)] text-black shadow-glow' 
-                : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/30 disabled:opacity-30 disabled:cursor-not-allowed'
+                : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed'
             }`}
         >
             {label}

@@ -46,32 +46,35 @@ export default function TestimonyForm({
             return;
         }
         setLoading(true);
+        try {
+            const user = JSON.parse(
+                localStorage.getItem(`impact_member_${tenant.slug}`) || "{}"
+            );
 
-        const user = JSON.parse(
-            localStorage.getItem(`impact_member_${tenant.slug}`) || "{}"
-        );
+            const { error } = await supabase.from("requests").insert({
+                tenant_id: tenant.id,
+                type: "testimony",
+                content: {
+                    subject: topic || "Témoignage",
+                    story: story,
+                    is_anonymous: isAnonymous,
+                    can_share_publicly: false,
+                    consent_rgpd: consent,
+                    requester: isAnonymous ? { firstName: "Anonyme", lastName: "" } : { firstName: user.firstName, lastName: user.lastName },
+                },
+            });
 
-        const { error } = await supabase.from("requests").insert({
-            tenant_id: tenant.id,
-            type: "testimony",
-            content: {
-                subject: topic || "Témoignage",
-                story: story,
-                is_anonymous: isAnonymous,
-                can_share_publicly: false,
-                consent_rgpd: consent,
-                requester: isAnonymous ? { firstName: "Anonyme", lastName: "" } : user,
-            },
-        });
+            if (error) throw error;
 
-        setLoading(false);
-
-        if (error) {
-            console.error("Supabase Error:", error);
-            alert("Erreur lors de l'envoi: " + (error.message || JSON.stringify(error)));
-        } else {
             setSuccess(true);
-            setTimeout(onSuccess, 3000);
+            setTimeout(() => {
+                onSuccess();
+            }, 2000);
+        } catch (err) {
+            console.error("Error submitting testimony:", err);
+            alert("Une erreur est survenue lors de l'envoi. Veuillez réessayer.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -88,18 +91,26 @@ export default function TestimonyForm({
 
     if (success) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full space-y-6">
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="w-16 h-16 rounded-full bg-accent-success/20 flex items-center justify-center mb-4"
+                    className="w-20 h-20 rounded-full bg-accent-success/20 flex items-center justify-center"
                 >
-                    <CheckCircle2 size={32} className="text-accent-success" />
+                    <CheckCircle2 size={40} className="text-accent-success" />
                 </motion.div>
-                <h3 className="text-xl font-bold text-white mb-2">Gloire à Dieu !</h3>
-                <p className="text-white/60">
-                    Votre témoignage a bien été reçu. Merci de partager ce que Dieu fait !
-                </p>
+                <div>
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Gloire à Dieu !</h3>
+                    <p className="text-white/70 leading-relaxed max-w-xs mx-auto">
+                        Votre témoignage a bien été reçu. Merci de partager ce que Dieu fait !
+                    </p>
+                </div>
+                <button
+                    onClick={onSuccess}
+                    className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition transform active:scale-95"
+                >
+                    Fermer
+                </button>
             </div>
         );
     }
@@ -132,19 +143,19 @@ export default function TestimonyForm({
             ) : (
                 <form onSubmit={handleSubmit} className="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">
+                        <label className="block text-sm font-medium text-white/80 mb-2">
                             De quoi s'agit-il ? (Titre)
                         </label>
                         <div className="relative">
                             <Sparkles
-                                className="absolute left-4 top-3.5 text-white/40"
+                                className="absolute left-4 top-3.5 text-white/60"
                                 size={20}
                             />
                             <input
                                 type="text"
                                 required
                                 placeholder="Ex: Guérison, Provision, Restauration..."
-                                className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-[var(--gold)] outline-none text-white placeholder-white/20 transition"
+                                className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 focus:border-[var(--gold)] outline-none text-white placeholder-white/60 transition"
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
                             />
@@ -152,14 +163,14 @@ export default function TestimonyForm({
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-white/70 mb-2">
-                            Racontez votre histoire
+                        <label className="block text-sm font-medium text-white/80 mb-2">
+                            Racontez-nous tout
                         </label>
                         <textarea
                             required
                             rows={6}
-                            placeholder="Dites-nous ce que le Seigneur a fait pour vous..."
-                            className="w-full py-3 px-4 rounded-xl bg-white/5 border border-white/10 focus:border-[var(--gold)] outline-none text-white placeholder-white/20 transition resize-none"
+                            placeholder="Écrivez ici votre témoignage..."
+                            className="w-full p-4 rounded-xl bg-white/10 border border-white/20 focus:border-[var(--gold)] outline-none text-white placeholder-white/60 transition resize-none"
                             value={story}
                             onChange={(e) => setStory(e.target.value)}
                         />
@@ -214,7 +225,7 @@ export default function TestimonyForm({
                                 <p className="text-sm font-medium text-white/80 leading-snug">
                                     Consentement RGPD <span className="text-[var(--gold)]">*</span>
                                 </p>
-                                <p className="text-xs text-white/40 leading-relaxed">
+                                <p className="text-xs text-white/60 leading-relaxed">
                                     J'accepte que mes données personnelles soient collectées et traitées par Impact Centre Chrétien. Pour en savoir plus, consultez notre politique de confidentialité.
                                 </p>
                             </div>

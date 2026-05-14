@@ -131,18 +131,26 @@ export default function BaptismForm({
 
     if (success) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-full">
+            <div className="flex flex-col items-center justify-center p-8 text-center h-full space-y-6">
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="w-16 h-16 rounded-full bg-accent-success/20 flex items-center justify-center mb-4"
+                    className="w-20 h-20 rounded-full bg-accent-success/20 flex items-center justify-center"
                 >
-                    <CheckCircle2 size={32} className="text-accent-success" />
+                    <CheckCircle2 size={40} className="text-accent-success" />
                 </motion.div>
-                <h3 className="text-xl font-bold text-white mb-2">Inscription Validée !</h3>
-                <p className="text-white/60">
-                    Vous serez contacté prochainement pour la prochaine session.
-                </p>
+                <div>
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Inscription Validée !</h3>
+                    <p className="text-white/60 leading-relaxed max-w-xs mx-auto">
+                        Vous serez contacté prochainement pour la prochaine session.
+                    </p>
+                </div>
+                <button
+                    onClick={onSuccess}
+                    className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition transform active:scale-95"
+                >
+                    Fermer
+                </button>
             </div>
         );
     }
@@ -160,13 +168,13 @@ export default function BaptismForm({
                         <span className="text-sm font-semibold text-primary">Session : {sessionDate}</span>
                     </div>
                 )}
-                <p className="text-sm text-white/60 mt-3">
+                <p className="text-sm text-white/70 mt-3">
                     Celui qui croira et qui sera baptisé sera sauvé, mais celui qui ne croira pas sera condamné. (Marc 16:16)
                 </p>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Genre</label>
+                <label className="block text-sm font-medium text-white/80 mb-2">Genre</label>
                 <div className="flex gap-4">
                     <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-white/5 border border-white/10 flex-1 hover:bg-white/10 transition">
                         <input
@@ -197,14 +205,14 @@ export default function BaptismForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">Nom de famille</label>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Nom de famille</label>
                     <div className="relative">
-                        <User className="absolute left-4 top-3.5 text-white/40" size={20} />
+                        <User className="absolute left-4 top-3.5 text-white/60" size={20} />
                         <input
                             type="text"
                             required
                             placeholder="Dos Santos"
-                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/20 transition"
+                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/40 transition"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                         />
@@ -212,14 +220,14 @@ export default function BaptismForm({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">Prénom</label>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Prénom</label>
                     <div className="relative">
-                        <User className="absolute left-4 top-3.5 text-white/40" size={20} />
+                        <User className="absolute left-4 top-3.5 text-white/60" size={20} />
                         <input
                             type="text"
                             required
                             placeholder="Jean"
-                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/20 transition"
+                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/40 transition"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                         />
@@ -228,16 +236,16 @@ export default function BaptismForm({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Année de naissance</label>
+                <label className="block text-sm font-medium text-white/80 mb-2">Année de naissance</label>
                 <div className="relative">
-                    <Calendar className="absolute left-4 top-3.5 text-white/40" size={20} />
+                    <Calendar className="absolute left-4 top-3.5 text-white/60" size={20} />
                     <input
                         type="number"
                         min="1900"
                         max={new Date().getFullYear()}
                         required
                         placeholder="2000"
-                        className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/20 transition"
+                        className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/40 transition"
                         value={birthYear}
                         onChange={(e) => setBirthYear(e.target.value)}
                     />
@@ -246,29 +254,30 @@ export default function BaptismForm({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">Téléphone</label>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Téléphone</label>
                     <div className="relative">
-                        <Phone className="absolute left-4 top-3.5 text-white/40" size={20} />
+                        <Phone className="absolute left-4 top-3.5 text-white/50" size={20} />
                         <input
                             type="tel"
                             required
+                            pattern="[0-9+ \-]*"
                             placeholder="06 12 34 56 78"
-                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/20 transition"
+                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white placeholder-white/40 transition"
                             value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            onChange={(e) => setPhone(e.target.value.replace(/[^0-9+ \-]/g, ""))}
                         />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-white/80 mb-2">Email</label>
                     <div className="relative">
-                        <Mail className="absolute left-4 top-3.5 text-white/40" size={20} />
+                        <Mail className="absolute left-4 top-3.5 text-white/50" size={20} />
                         <input
                             type="email"
                             required
                             placeholder="votre@email.com"
-                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/5 border border-white/10 focus:border-gold outline-none text-white placeholder-white/20 transition"
+                            className="w-full py-3 pl-12 pr-4 rounded-xl bg-white/10 border border-white/20 focus:border-gold outline-none text-white placeholder-white/40 transition"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -277,26 +286,26 @@ export default function BaptismForm({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Avez-vous déjà fait la prière du salut ?</label>
+                <label className="block text-sm font-medium text-white/80 mb-2">Avez-vous déjà fait la prière du salut ?</label>
                 <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-white/5 border border-white/10 flex-1 hover:bg-white/10 transition">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-white/10 border border-white/20 flex-1 hover:bg-white/20 transition">
                         <input
                             type="radio"
                             name="salvationPrayer"
                             value="Oui"
-                            className="w-4 h-4 text-gold border-white/30 focus:ring-gold bg-white/5"
+                            className="w-4 h-4 text-gold border-white/30 focus:ring-gold bg-white/10"
                             checked={salvationPrayer === "Oui"}
                             onChange={(e) => setSalvationPrayer(e.target.value)}
                             required
                         />
                         <span className="text-white text-sm">Oui</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-white/5 border border-white/10 flex-1 hover:bg-white/10 transition">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-white/10 border border-white/20 flex-1 hover:bg-white/20 transition">
                         <input
                             type="radio"
                             name="salvationPrayer"
                             value="Non"
-                            className="w-4 h-4 text-gold border-white/30 focus:ring-gold bg-white/5"
+                            className="w-4 h-4 text-gold border-white/30 focus:ring-gold bg-white/10"
                             checked={salvationPrayer === "Non"}
                             onChange={(e) => setSalvationPrayer(e.target.value)}
                             required
@@ -308,14 +317,14 @@ export default function BaptismForm({
 
 
             <div className="space-y-4">
-                <label className="block text-sm font-medium text-white/70">Formations suivies</label>
+                <label className="block text-sm font-medium text-white/80">Formations suivies</label>
                 <div className="flex flex-wrap gap-2">
                     <button
                         type="button"
                         onClick={() => setFormations(["Aucune"])}
                         className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${formations.includes("Aucune")
                             ? 'bg-[var(--gold)] border-[var(--gold)] text-black shadow-glow'
-                            : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/30'
+                            : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30 hover:text-white'
                             }`}
                     >
                         Aucune
@@ -346,7 +355,7 @@ export default function BaptismForm({
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-white/70 mb-2">Confirmez-vous votre demande de baptême ?</label>
+                <label className="block text-sm font-medium text-white/80 mb-2">Confirmez-vous votre demande de baptême ?</label>
                 <div className="flex gap-4">
                     <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl bg-white/5 border border-white/10 flex-1 hover:bg-white/10 transition">
                         <input
@@ -376,8 +385,8 @@ export default function BaptismForm({
             </div>
 
             <div className="pt-6 border-t border-white/5">
-                <label className="flex items-start gap-4 p-4 rounded-2xl bg-[#0d1117] border border-white/5 cursor-pointer hover:bg-white/[0.04] transition-all group">
-                    <div className={`mt-1 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${consent ? 'bg-[var(--gold)] border-[var(--gold)]' : 'border-white/10 group-hover:border-[var(--gold)]/50'}`}>
+                <label className="flex items-start gap-4 p-4 rounded-2xl bg-white/5 border border-white/20 cursor-pointer hover:bg-white/[0.08] transition-all group">
+                    <div className={`mt-1 flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${consent ? 'bg-[var(--gold)] border-[var(--gold)]' : 'border-white/20 group-hover:border-[var(--gold)]/50'}`}>
                         <AnimatePresence>
                             {consent && (
                                 <motion.div
@@ -401,8 +410,8 @@ export default function BaptismForm({
                         <p className="text-sm font-medium text-white/80 leading-snug">
                             Consentement RGPD <span className="text-[var(--gold)]">*</span>
                         </p>
-                        <p className="text-xs text-white/40 leading-relaxed">
-                            J'accepte que mes données personnelles soient collectées et traitées par Impact Centre Chrétien dans le cadre de ma demande de baptême. Pour en savoir plus, consultez notre politique de confidentialité.
+                        <p className="text-xs text-white/60 leading-relaxed">
+                            J&apos;accepte que mes données personnelles soient collectées et traitées par Impact Centre Chrétien dans le cadre de ma demande de baptême. Pour en savoir plus, consultez notre politique de confidentialité.
                         </p>
                     </div>
                 </label>

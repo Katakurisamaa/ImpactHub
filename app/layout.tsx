@@ -24,8 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="dark">
-      <body className={`${outfit.variable} ${cormorant.variable} font-sans`}>
+    <html lang="fr" className="dark" suppressHydrationWarning>
+      <body 
+        className={`${outfit.variable} ${cormorant.variable} font-sans`}
+        suppressHydrationWarning
+      >
         <NextTopLoader color="#d4a843" height={3} showSpinner={false} />
         <RevealObserver />
         <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-navy text-foreground">

@@ -51,7 +51,7 @@ export default function PublicTestimoniesList({ tenant }: { tenant: Tenant }) {
 
     if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-gold" /></div>;
 
-    if (testimonies.length === 0) return <div className="text-white/50 text-center p-8">Aucun témoignage partagé pour le moment.</div>;
+    if (testimonies.length === 0) return <div className="text-white/70 text-center p-8">Aucun témoignage partagé pour le moment.</div>;
 
     return (
         <div className="space-y-4">
@@ -63,7 +63,7 @@ export default function PublicTestimoniesList({ tenant }: { tenant: Tenant }) {
                         </div>
                         <div>
                             <h4 className="text-white font-bold">{t.content.subject}</h4>
-                            <span className="text-xs text-white/40 flex items-center gap-1 mt-1">
+                            <span className="text-xs text-white/60 flex items-center gap-1 mt-1">
                                 <Clock size={10} />
                                 {format(new Date(t.created_at), "d MMMM yyyy", { locale: fr })}
                             </span>
@@ -72,7 +72,7 @@ export default function PublicTestimoniesList({ tenant }: { tenant: Tenant }) {
 
                     <p className="text-white/80 text-sm italic mb-4">"{t.content.story}"</p>
 
-                    <div className="flex items-center gap-2 text-xs text-white/50 border-t border-white/5 pt-2">
+                    <div className="flex items-center gap-2 text-xs text-white/70 border-t border-white/5 pt-2">
                         <User size={12} />
                         <span>
                             {t.content.is_anonymous ? "Anonyme" : `${t.content.requester?.firstName} ${t.content.requester?.lastName}`}
