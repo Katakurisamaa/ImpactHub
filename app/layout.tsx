@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: "ImpactHub - Connect, Grow, Delegate",
   description: "The modular church management platform for communities.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/logo.svg",
+  },
+  manifest: "/manifest.json",
 };
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans", display: "swap" });

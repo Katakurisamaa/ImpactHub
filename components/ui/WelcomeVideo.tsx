@@ -38,11 +38,22 @@ export default function WelcomeVideo({ onComplete, isReplay = false }: { onCompl
                     className="fixed inset-0 z-[100] flex items-center justify-center bg-black overflow-hidden cursor-pointer"
                     onClick={toggleControls}
                 >
+                    {/* Always visible direct skip button */}
+                    <div className="absolute top-6 right-6 z-50">
+                        <button
+                            onClick={handleSkip}
+                            className="px-4 py-2 rounded-full bg-black/60 border border-white/20 text-xs font-semibold text-white/90 hover:text-white hover:bg-black/80 hover:border-[var(--gold)] backdrop-blur-md transition-all shadow-lg active:scale-95"
+                        >
+                            Passer &rarr;
+                        </button>
+                    </div>
+
                     <video
                         ref={videoRef}
                         src="/intro.mp4"
                         autoPlay
                         playsInline
+                        preload="auto"
                         className="absolute inset-0 w-full h-full object-cover opacity-80"
                         onEnded={() => handleSkip()}
                     />

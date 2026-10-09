@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Users, Activity, Home } from "lucide-react";
 import { useEffect, useState } from "react";
+import ImpactHubLogo from "@/components/ui/ImpactHubLogo";
 
 const SPACES = [
   {
@@ -103,10 +104,7 @@ export default function AccessPage() {
           borderBottom: "0.5px solid var(--glass-border)",
         }}>
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-2xl font-semibold tracking-wide flex items-center gap-2" style={{ fontFamily: "var(--font-cormorant)", color: "var(--gold-light)" }}>
-            <Home size={24} />
-            ImpactHub
-          </Link>
+          <ImpactHubLogo size="md" href="/" subtitle="Espaces de Gestion" />
         </div>
       </header>
 

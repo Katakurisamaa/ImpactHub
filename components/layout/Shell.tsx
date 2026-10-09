@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, ListTodo, UserCircle, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { Tenant } from "@/types";
+import ImpactHubLogo from "@/components/ui/ImpactHubLogo";
 
 interface ShellProps {
     children: React.ReactNode;
@@ -38,8 +39,12 @@ export default function Shell({ children, tenant, user, activeTab, setActiveTab 
         <div className="min-h-screen font-sans pb-32 md:pb-0 md:pl-64 transition-all duration-300 bg-transparent relative text-foreground">
             {/* Desktop Sidebar */}
             <aside className="fixed left-0 top-0 h-full w-64 glass-card border-l-0 border-y-0 rounded-none hidden md:flex flex-col p-6 z-50">
-                <div className="mb-10 flex items-center gap-3">
-                    <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)", color: "var(--gold-light)" }}>{tenant.name}</h1>
+                <div className="mb-8 flex items-center gap-3">
+                    <ImpactHubLogo size="sm" withText={false} />
+                    <div className="overflow-hidden">
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--gold)] block">Campus</span>
+                        <h1 className="text-lg font-bold tracking-tight text-[var(--text)] truncate" style={{ fontFamily: "var(--font-heading)" }}>{tenant.name}</h1>
+                    </div>
                 </div>
 
                 <nav className="flex-1 space-y-2">
@@ -79,8 +84,9 @@ export default function Shell({ children, tenant, user, activeTab, setActiveTab 
 
             {/* Mobile Header (Sticky) */}
             <header className={`md:hidden fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-6 py-4 flex justify-between items-center ${scrolled ? "fixed-nav shadow-lg" : "bg-transparent"}`}>
-                <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)", color: "var(--gold-light)" }}>{tenant.name}</span>
+                <div className="flex items-center gap-2.5">
+                    <ImpactHubLogo size="sm" withText={false} />
+                    <span className="text-base font-bold tracking-tight text-[var(--gold-light)]" style={{ fontFamily: "var(--font-heading)" }}>{tenant.name}</span>
                 </div>
 
                 <div className="flex items-center gap-4">

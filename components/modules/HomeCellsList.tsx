@@ -3,16 +3,21 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { Tenant } from "@/types";
-import { Loader2, User, Phone, MapPin, Clock, Search, ArrowRight, CheckCircle2, Send } from "lucide-react";
+import { Loader2, User, Phone, MapPin, Clock, Search, ArrowRight, CheckCircle2, Send, Map as MapIcon, List, Navigation } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import CellsMapView from "./CellsMapView";
 
-type HomeCell = {
+export type HomeCell = {
     id: string;
     name: string;
     address: string;
     leader_name: string;
     phone: string;
     meeting_time: string;
+    latitude?: number;
+    longitude?: number;
+    lat?: number;
+    lng?: number;
     distance?: number;
 };
 
@@ -21,9 +26,12 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
     const [loading, setLoading] = useState(true);
     const [selectedCell, setSelectedCell] = useState<HomeCell | null>(null);
 
-    // Search State
+    // Search & View State
+    const [viewMode, setViewMode] = useState<"list" | "map">("list");
     const [userAddress, setUserAddress] = useState("");
+    const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(null);
     const [isSearching, setIsSearching] = useState(false);
+    const [isGeolocating, setIsGeolocating] = useState(false);
     const [searchError, setSearchError] = useState("");
     const [filteredCells, setFilteredCells] = useState<HomeCell[]>([]);
 
@@ -126,18 +134,26 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
         setIsSearching(true);
         setSearchError("");
 
-        const userCoords = await geocodeAddress(userAddress);
-        if (!userCoords) {
+        const coords = await geocodeAddress(userAddress);
+        if (!coords) {
             setSearchError("Adresse non trouvée. Essayez d'être plus précis.");
             setIsSearching(false);
             return;
         }
 
+        setUserCoords(coords);
+
         const cellsWithDistance = await Promise.all(cells.map(async (cell) => {
+            const cellLat = cell.latitude || cell.lat;
+            const cellLon = cell.longitude || cell.lng;
+            if (cellLat && cellLon) {
+                const dist = calculateDistance(coords.lat, coords.lon, cellLat, cellLon);
+                return { ...cell, distance: dist };
+            }
             const cellCoords = await geocodeAddress(cell.address);
             if (cellCoords) {
-                const dist = calculateDistance(userCoords.lat, userCoords.lon, cellCoords.lat, cellCoords.lon);
-                return { ...cell, distance: dist };
+                const dist = calculateDistance(coords.lat, coords.lon, cellCoords.lat, cellCoords.lon);
+                return { ...cell, latitude: cellCoords.lat, longitude: cellCoords.lon, distance: dist };
             }
             return { ...cell, distance: 9999 };
         }));
@@ -145,6 +161,48 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
         const sorted = cellsWithDistance.sort((a, b) => (a.distance || 0) - (b.distance || 0));
         setFilteredCells(sorted);
         setIsSearching(false);
+    };
+
+    const handleGeolocate = () => {
+        if (typeof window === "undefined" || !navigator.geolocation) {
+            setSearchError("La géolocalisation n'est pas disponible sur cet appareil.");
+            return;
+        }
+
+        setIsGeolocating(true);
+        setSearchError("");
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const coords = { lat: position.coords.latitude, lon: position.coords.longitude };
+                setUserCoords(coords);
+
+                const cellsWithDistance = await Promise.all(cells.map(async (cell) => {
+                    const cellLat = cell.latitude || cell.lat;
+                    const cellLon = cell.longitude || cell.lng;
+                    if (cellLat && cellLon) {
+                        const dist = calculateDistance(coords.lat, coords.lon, cellLat, cellLon);
+                        return { ...cell, distance: dist };
+                    }
+                    const cellCoords = await geocodeAddress(cell.address);
+                    if (cellCoords) {
+                        const dist = calculateDistance(coords.lat, coords.lon, cellCoords.lat, cellCoords.lon);
+                        return { ...cell, latitude: cellCoords.lat, longitude: cellCoords.lon, distance: dist };
+                    }
+                    return { ...cell, distance: 9999 };
+                }));
+
+                const sorted = cellsWithDistance.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+                setFilteredCells(sorted);
+                setIsGeolocating(false);
+            },
+            (err) => {
+                console.warn("Geolocation denied or error:", err);
+                setIsGeolocating(false);
+                setSearchError("Accès à la position refusé. Saisissez votre adresse manuellement.");
+            },
+            { timeout: 8000 }
+        );
     };
 
     const handleJoinRequest = async (e: React.FormEvent) => {
@@ -328,52 +386,118 @@ export default function HomeCellsList({ tenant, onSuccess }: { tenant: Tenant; o
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         key="list"
-                        className="space-y-3"
+                        className="space-y-4"
                     >
+                        {/* View Switcher & Geolocation Action */}
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode("list")}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                        viewMode === "list"
+                                            ? "bg-[var(--gold)] text-[#06061a] shadow-sm font-bold"
+                                            : "text-[var(--text-muted)] hover:text-white"
+                                    }`}
+                                >
+                                    <List size={14} />
+                                    <span>Liste ({filteredCells.length})</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode("map")}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                                        viewMode === "map"
+                                            ? "bg-[var(--gold)] text-[#06061a] shadow-sm font-bold"
+                                            : "text-[var(--text-muted)] hover:text-white"
+                                    }`}
+                                >
+                                    <MapIcon size={14} />
+                                    <span>Carte interactive</span>
+                                </button>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={handleGeolocate}
+                                disabled={isGeolocating}
+                                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-[var(--gold-light)] hover:bg-white/10 hover:border-[var(--gold)]/40 transition-all active:scale-95 disabled:opacity-50"
+                                title="Calculer la distance vers toutes les cellules"
+                            >
+                                {isGeolocating ? <Loader2 size={13} className="animate-spin text-[var(--gold)]" /> : <Navigation size={13} />}
+                                <span className="hidden sm:inline">Me géolocaliser</span>
+                            </button>
+                        </div>
+
                         {/* Search Bar */}
-                        <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+                        <form onSubmit={handleSearch} className="flex gap-2">
                             <input
                                 type="text"
-                                placeholder="Votre adresse (ex: 10 rue de la Paix, Charleroi)"
-                                className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2.5 text-white placeholder-white/40 text-sm focus:border-gold outline-none"
+                                placeholder="Votre adresse ou ville (ex: Charleroi, Gosselies...)"
+                                className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-3.5 py-2.5 text-white placeholder-white/40 text-sm focus:border-[var(--gold)] outline-none transition-colors"
                                 value={userAddress}
                                 onChange={(e) => setUserAddress(e.target.value)}
                             />
                             <button
                                 type="submit"
                                 disabled={isSearching}
-                                className="bg-gold text-black rounded-lg px-3 py-2.5 flex items-center justify-center disabled:opacity-50"
+                                className="bg-[var(--gold)] text-navy font-bold rounded-xl px-4 py-2.5 flex items-center justify-center hover:bg-[var(--gold-light)] transition-colors disabled:opacity-50"
+                                title="Rechercher par adresse"
                             >
-                                {isSearching ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
+                                {isSearching ? <Loader2 className="animate-spin text-navy" size={16} /> : <Search size={16} />}
                             </button>
                         </form>
 
-                        {searchError && <p className="text-red-400 text-xs px-1">{searchError}</p>}
+                        {searchError && <p className="text-red-400 text-xs px-1 font-medium">{searchError}</p>}
 
-                        <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
-                            {filteredCells.map((cell) => (
-                                <div
-                                    key={cell.id}
-                                    onClick={() => setSelectedCell(cell)}
-                                    className="p-4 rounded-xl bg-white/10 border border-white/20 hover:border-gold/30 transition cursor-pointer flex justify-between items-center group active:scale-[0.98]"
-                                >
-                                    <div>
-                                        <h4 className="text-white font-bold">{cell.name}</h4>
-                                        <p className="text-xs text-white/50 mt-1 flex items-center gap-1">
-                                            <MapPin size={12} /> {cell.address.includes(',') ? cell.address.split(',').slice(-1)[0].trim() : "Secteur confidentiel"}
-                                        </p>
-                                        {cell.distance !== undefined && cell.distance < 1000 && (
-                                            <p className="text-xs text-green-400 mt-1 font-bold">
-                                                {cell.distance.toFixed(1)} km
+                        {/* Interactive Map View */}
+                        {viewMode === "map" ? (
+                            <CellsMapView
+                                cells={filteredCells}
+                                userCoords={userCoords}
+                                selectedCell={selectedCell}
+                                onSelectCell={(cell) => setSelectedCell(cell)}
+                                onGeolocateUser={handleGeolocate}
+                                isGeolocating={isGeolocating}
+                            />
+                        ) : (
+                            /* List View */
+                            <div className="space-y-2.5 max-h-[55vh] overflow-y-auto custom-scrollbar pr-1">
+                                {filteredCells.map((cell) => (
+                                    <div
+                                        key={cell.id}
+                                        onClick={() => setSelectedCell(cell)}
+                                        className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-[var(--gold)]/50 hover:bg-white/[0.06] transition-all cursor-pointer flex justify-between items-center group active:scale-[0.99]"
+                                    >
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-white font-bold text-sm md:text-base group-hover:text-[var(--gold-light)] transition-colors">
+                                                    {cell.name}
+                                                </h4>
+                                                {cell.meeting_time && (
+                                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/60">
+                                                        {cell.meeting_time}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-[var(--text-muted)] flex items-center gap-1.5 font-light">
+                                                <MapPin size={12} className="text-[var(--gold)]" />
+                                                {cell.address.includes(',') ? cell.address.split(',').slice(-1)[0].trim() : "Secteur confidentiel"}
                                             </p>
-                                        )}
+                                            {cell.distance !== undefined && cell.distance < 1000 && (
+                                                <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1 pt-0.5">
+                                                    <Navigation size={11} />
+                                                    À {cell.distance.toFixed(1)} km de votre position
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="text-[var(--gold)] p-2 rounded-xl bg-white/5 border border-white/5 group-hover:border-[var(--gold)]/30 group-hover:bg-[var(--gold-pale)] transition-all">
+                                            <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                                        </div>
                                     </div>
-                                    <div className="text-gold opacity-0 group-hover:opacity-100 transition">
-                                        →
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Building, Activity, Search, MapPin, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import ImpactHubLogo from "@/components/ui/ImpactHubLogo";
 
 type Tenant = {
   id: string;
@@ -106,9 +107,7 @@ export default function Home() {
           borderBottom: "0.5px solid var(--glass-border)",
         }}>
         <div className="flex items-center gap-3">
-          <span className="text-2xl font-semibold tracking-wide" style={{ fontFamily: "var(--font-cormorant)", color: "var(--gold-light)" }}>
-            ImpactHub
-          </span>
+          <ImpactHubLogo size="md" href="/" subtitle="Portail des Campus" />
         </div>
         <nav className="flex items-center gap-4 md:gap-8 text-sm">
           <Link href="/access" className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--glass-border)] bg-white/5 hover:bg-white/10 transition-all text-[var(--text-muted)] hover:text-[var(--gold-light)]">

@@ -1,0 +1,24 @@
+{
+  "name": "ImpactHub - Portail Église",
+  "short_name": "ImpactHub",
+  "description": "Portail et plateforme de gestion pour les campus d'église.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06061a",
+  "theme_color": "#06061a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

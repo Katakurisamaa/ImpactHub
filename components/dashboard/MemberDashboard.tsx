@@ -1,32 +1,158 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Tenant } from "@/types";
 import { supabase } from "@/lib/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Calendar, ClipboardList, MapPin, Bus, Heart,
-    MessageSquareQuote, MessageCircle, ListTodo, Loader2, Sparkles, ChevronRight,
-    Users2, UserCheck, Church, ArrowLeft
+    MessageSquareQuote, MessageCircle, ListTodo, Loader2, ChevronRight,
+    Users2, UserCheck, Church, ArrowLeft, Search, Filter, PlayCircle, ShieldCheck
 } from "lucide-react";
 import Shell from "@/components/layout/Shell";
+import ImpactHubLogo from "@/components/ui/ImpactHubLogo";
 
-// Modules Definition
-const MODULES_DEF = [
-    { id: 'appointments', label: 'RDV', description: 'Pastoral & Social', icon: Calendar, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
-    { id: 'registrations', label: 'Inscriptions', description: 'Baptême & PCNC', icon: ClipboardList, color: 'from-accent-success/20 to-accent-success/10', border: 'border-accent-success/20' },
-    { id: 'home_cells', label: 'Cellules de maison', description: 'Trouver une cellule', icon: MapPin, color: 'from-gold-500/20 to-gold-600/10', border: 'border-gold-500/20' },
-    { id: 'shuttle', label: 'Navette', description: 'Transport cultes', icon: Bus, color: 'from-gold-400/20 to-gold-500/10', border: 'border-gold-400/20' },
-    { id: 'prayer', label: 'Prière', description: 'Partager un sujet', icon: Heart, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
-    { id: 'testimonies', label: 'Témoignages', description: 'Partager un miracle', icon: MessageSquareQuote, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
-    { id: 'feedback', label: 'Retour', description: 'Donner votre avis', icon: MessageCircle, color: 'from-accent-success/20 to-accent-success/10', border: 'border-accent-success/20' },
-    { id: 'star', label: 'Devenir S.T.A.R', description: 'Rejoindre une équipe', icon: Sparkles, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
-    { id: 'women_impact', label: "Femmes d'Impact", description: 'Groupe WhatsApp', icon: Users2, color: 'from-accent-pink/20 to-accent-pink/10', border: 'border-accent-pink/20' },
-    { id: 'men_impact', label: "Hommes d'Impact", description: 'Groupe WhatsApp', icon: UserCheck, color: 'from-primary/20 to-primary/10', border: 'border-primary/20' },
-    { id: 'church_group', label: "Groupe de l'Église", description: 'Toute l\'actualité', icon: Church, color: 'from-gold-500/20 to-gold-600/10', border: 'border-gold-500/20' },
+// Definition of categories
+type CategoryKey = "all" | "spiritual" | "community" | "service";
+
+interface CategoryMeta {
+    id: CategoryKey;
+    label: string;
+    description: string;
+}
+
+const CATEGORIES: CategoryMeta[] = [
+    { id: "all", label: "Tous", description: "L'ensemble des services disponibles" },
+    { id: "spiritual", label: "Spiritualité & Foi", description: "RDV, prière, baptêmes et témoignages" },
+    { id: "community", label: "Vie de Communauté", description: "Cellules de maison et groupes de partage" },
+    { id: "service", label: "Service & Pratique", description: "Navettes, bénévolat S.T.A.R et retours" },
 ];
 
-// Import forms (Lazy load or direct)
+// Modules Definition with categories and semantic themes
+const MODULES_DEF = [
+    { 
+        id: 'appointments', 
+        category: 'spiritual' as CategoryKey,
+        label: 'RDV Pastoral & Social', 
+        description: 'Écoute, conseil et accompagnement spirituel', 
+        icon: Calendar, 
+        color: 'from-amber-500/15 via-amber-950/20 to-transparent', 
+        border: 'border-amber-500/25 hover:border-amber-400/50',
+        badge: 'Pastorale'
+    },
+    { 
+        id: 'registrations', 
+        category: 'spiritual' as CategoryKey,
+        label: 'Inscriptions & Parcours', 
+        description: 'Baptême d’eau & Affermissement (PCNC)', 
+        icon: ClipboardList, 
+        color: 'from-emerald-500/15 via-emerald-950/20 to-transparent', 
+        border: 'border-emerald-500/25 hover:border-emerald-400/50',
+        badge: 'Parcours'
+    },
+    { 
+        id: 'prayer', 
+        category: 'spiritual' as CategoryKey,
+        label: 'Sujets de Prière', 
+        description: 'Déposer une requête pour l’intercession', 
+        icon: Heart, 
+        color: 'from-rose-500/15 via-rose-950/20 to-transparent', 
+        border: 'border-rose-500/25 hover:border-rose-400/50',
+        badge: 'Intercession'
+    },
+    { 
+        id: 'testimonies', 
+        category: 'spiritual' as CategoryKey,
+        label: 'Témoignages', 
+        description: 'Partager ce que Dieu a accompli pour vous', 
+        icon: MessageSquareQuote, 
+        color: 'from-amber-400/15 via-amber-900/20 to-transparent', 
+        border: 'border-amber-400/25 hover:border-amber-300/50',
+        badge: 'Édification'
+    },
+    { 
+        id: 'home_cells', 
+        category: 'community' as CategoryKey,
+        label: 'Cellules de maison', 
+        description: 'Trouver un groupe de partage près de chez vous', 
+        icon: MapPin, 
+        color: 'from-gold-500/15 via-gold-950/20 to-transparent', 
+        border: 'border-gold-500/25 hover:border-gold-400/50',
+        badge: 'Proximité'
+    },
+    { 
+        id: 'church_group', 
+        category: 'community' as CategoryKey,
+        label: "Canal de l'Église", 
+        description: 'Annonces officielles et actualité du campus', 
+        icon: Church, 
+        color: 'from-yellow-500/15 via-yellow-950/20 to-transparent', 
+        border: 'border-yellow-500/25 hover:border-yellow-400/50',
+        badge: 'WhatsApp'
+    },
+    { 
+        id: 'women_impact', 
+        category: 'community' as CategoryKey,
+        label: "Femmes d'Impact", 
+        description: 'Communauté d’encouragement et de foi', 
+        icon: Users2, 
+        color: 'from-pink-500/15 via-pink-950/20 to-transparent', 
+        border: 'border-pink-500/25 hover:border-pink-400/50',
+        badge: 'WhatsApp'
+    },
+    { 
+        id: 'men_impact', 
+        category: 'community' as CategoryKey,
+        label: "Hommes d'Impact", 
+        description: 'Fraternité, vision et affermissement', 
+        icon: UserCheck, 
+        color: 'from-blue-500/15 via-blue-950/20 to-transparent', 
+        border: 'border-blue-500/25 hover:border-blue-400/50',
+        badge: 'WhatsApp'
+    },
+    { 
+        id: 'star', 
+        category: 'service' as CategoryKey,
+        label: 'Devenir S.T.A.R', 
+        description: 'Serviteur d’impact : rejoindre un département', 
+        icon: ShieldCheck, 
+        color: 'from-violet-500/15 via-violet-950/20 to-transparent', 
+        border: 'border-violet-500/25 hover:border-violet-400/50',
+        badge: 'Engagement'
+    },
+    { 
+        id: 'shuttle', 
+        category: 'service' as CategoryKey,
+        label: 'Navettes de culte', 
+        description: 'Lignes, horaires et transport du dimanche', 
+        icon: Bus, 
+        color: 'from-cyan-500/15 via-cyan-950/20 to-transparent', 
+        border: 'border-cyan-500/25 hover:border-cyan-400/50',
+        badge: 'Transport'
+    },
+    { 
+        id: 'feedback', 
+        category: 'service' as CategoryKey,
+        label: 'Vos Retours & Avis', 
+        description: 'Partager une suggestion avec l’équipe pastorale', 
+        icon: MessageCircle, 
+        color: 'from-teal-500/15 via-teal-950/20 to-transparent', 
+        border: 'border-teal-500/25 hover:border-teal-400/50',
+        badge: 'Écoute'
+    },
+    { 
+        id: 'schedule', 
+        category: 'community' as CategoryKey,
+        label: 'Agenda & Cultes', 
+        description: 'Horaires des célébrations et réunions de la semaine', 
+        icon: Church, 
+        color: 'from-amber-500/15 via-amber-950/20 to-transparent', 
+        border: 'border-amber-500/25 hover:border-amber-400/50',
+        badge: 'Horaires'
+    },
+];
+
+// Import forms
 import PrayerRequestForm from "@/components/modules/PrayerRequestForm";
 import AppointmentForm from "@/components/modules/AppointmentForm";
 import TestimonyForm from "@/components/modules/TestimonyForm";
@@ -39,6 +165,7 @@ import FeedbackForm from "@/components/modules/FeedbackForm";
 import StarForm from "@/components/modules/StarForm";
 import MyRequestsList from "@/components/modules/MyRequestsList";
 import GroupWhatsAppView from "@/components/modules/GroupWhatsAppView";
+import CampusScheduleView from "@/components/modules/CampusScheduleView";
 import BottomSheet from "@/components/ui/BottomSheet";
 
 export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Tenant, onReplayVideo?: () => void }) {
@@ -46,6 +173,9 @@ export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Ten
     const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard', 'requests', 'profile'
     const [availableModules, setAvailableModules] = useState<typeof MODULES_DEF>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState<CategoryKey>("all");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
 
     // Module Interaction State
     const [activeModule, setActiveModule] = useState<any>(null);
@@ -53,33 +183,125 @@ export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Ten
 
     useEffect(() => {
         const stored = localStorage.getItem(`impact_member_${tenant.slug}`);
-        if (stored) setUser(JSON.parse(stored));
+        if (stored) {
+            try {
+                setUser(JSON.parse(stored));
+            } catch (err) {
+                console.error("Erreur lecture données membre :", err);
+            }
+        }
 
         // Fetch active modules
         const fetchModules = async () => {
-            const { data } = await supabase
-                .from('tenant_modules')
-                .select('module_key')
-                .eq('tenant_id', tenant.id)
-                .eq('is_active', true);
+            try {
+                const { data } = await supabase
+                    .from('tenant_modules')
+                    .select('module_key')
+                    .eq('tenant_id', tenant.id)
+                    .eq('is_active', true);
 
-            if (data) {
-                const activeKeys = data.map(d => d.module_key);
-                const filtered = MODULES_DEF.filter(m => activeKeys.includes(m.id));
-                setAvailableModules(filtered);
+                if (data) {
+                    const activeKeys = data.map(d => d.module_key);
+                    const filtered = MODULES_DEF.filter(m => m.id === 'schedule' || activeKeys.includes(m.id));
+                    setAvailableModules(filtered);
+                }
+            } catch (err) {
+                console.error("Erreur chargement modules :", err);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
+
+        // Fetch user's pending requests count
+        const fetchRequestsCount = async () => {
+            if (!stored) return;
+            try {
+                const parsedUser = JSON.parse(stored);
+                const { data } = await supabase
+                    .from('requests')
+                    .select('id, content, status')
+                    .eq('tenant_id', tenant.id)
+                    .neq('status', 'archived');
+
+                if (data) {
+                    const normalize = (s: any) => String(s || "").trim().toLowerCase();
+                    const mine = data.filter(r => {
+                        const content = r.content || {};
+                        const requester = content.requester || {};
+                        const first = requester.firstName || content.firstName || content.prenom || "";
+                        const last = requester.lastName || content.lastName || content.nom || "";
+                        const full = content.fullName || "";
+                        return (
+                            (normalize(first) === normalize(parsedUser.firstName) && normalize(last) === normalize(parsedUser.lastName)) ||
+                            (full && normalize(full).includes(normalize(parsedUser.firstName)) && normalize(full).includes(normalize(parsedUser.lastName)))
+                        );
+                    });
+                    setPendingRequestsCount(mine.length);
+                }
+            } catch (e) {
+                // Ignore count error silently
+            }
+        };
+
         fetchModules();
+        fetchRequestsCount();
     }, [tenant.id, tenant.slug]);
 
-    if (loading) return <div className="h-screen flex items-center justify-center text-gold"><Loader2 className="animate-spin" /></div>;
+    // Filter modules based on category and search
+    const filteredModules = useMemo(() => {
+        return availableModules.filter(module => {
+            const matchesCategory = selectedCategory === "all" || module.category === selectedCategory;
+            if (!matchesCategory) return false;
+
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase().trim();
+            return (
+                module.label.toLowerCase().includes(query) ||
+                module.description.toLowerCase().includes(query) ||
+                module.badge.toLowerCase().includes(query)
+            );
+        });
+    }, [availableModules, selectedCategory, searchQuery]);
+
+    // Count modules per category
+    const categoryCounts = useMemo(() => {
+        const counts: Record<CategoryKey, number> = {
+            all: availableModules.length,
+            spiritual: 0,
+            community: 0,
+            service: 0,
+        };
+        availableModules.forEach(m => {
+            if (counts[m.category] !== undefined) {
+                counts[m.category] += 1;
+            }
+        });
+        return counts;
+    }, [availableModules]);
+
+    if (loading) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center gap-4 text-gold">
+                <Loader2 className="animate-spin w-8 h-8 text-[var(--gold)]" />
+                <p className="text-sm text-[var(--text-muted)] font-light">Chargement de votre espace...</p>
+            </div>
+        );
+    }
 
     const renderContent = () => {
         if (activeTab === 'requests') {
             return (
                 <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white mb-6">Mes Demandes</h2>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+                        <div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
+                                Mes Demandes & Suivis
+                            </h2>
+                            <p className="text-sm text-[var(--text-muted)] mt-1">
+                                Retrouvez l’historique et l'avancement de vos demandes au campus.
+                            </p>
+                        </div>
+                    </div>
                     <MyRequestsList tenant={tenant} onSuccess={() => { }} />
                 </div>
             );
@@ -87,21 +309,40 @@ export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Ten
 
         if (activeTab === 'profile') {
             return (
-                <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-4xl font-bold text-white border border-white/10">
-                        {user?.firstName?.charAt(0)}
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-white">{user?.firstName} {user?.lastName}</h2>
-                        <p className="text-white/60 mb-6">Membre - {tenant.name}</p>
+                <div className="max-w-xl mx-auto py-8 space-y-6">
+                    <div className="glass-card p-8 text-center flex flex-col items-center space-y-5">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--gold)]/20 to-[var(--gold)]/5 flex items-center justify-center text-3xl font-bold text-[var(--gold-light)] border border-[var(--gold)]/30 shadow-[0_0_20px_rgba(212,168,67,0.15)]">
+                            {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
+                                {user?.firstName} {user?.lastName}
+                            </h2>
+                            <p className="text-sm text-[var(--gold-light)] mt-1 font-medium">Membre Connecté</p>
+                            <p className="text-xs text-[var(--text-muted)] mt-0.5">{tenant.name}</p>
+                        </div>
 
-                        <button
-                            onClick={onReplayVideo}
-                            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all font-medium"
-                        >
-                            <Sparkles className="w-5 h-5 text-gold" />
-                            Revoir la vidéo de bienvenue
-                        </button>
+                        <div className="w-full pt-4 border-t border-white/10 flex flex-col gap-3">
+                            {onReplayVideo && (
+                                <button
+                                    onClick={onReplayVideo}
+                                    className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-[var(--gold)]/40 transition-all font-medium text-sm"
+                                >
+                                    <PlayCircle className="w-4 h-4 text-[var(--gold)]" />
+                                    Revoir la vidéo de bienvenue
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem(`impact_member_${tenant.slug}`);
+                                    window.location.reload();
+                                }}
+                                className="w-full py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all text-sm font-medium"
+                            >
+                                Déconnexion de cet appareil
+                            </button>
+                        </div>
                     </div>
                 </div>
             );
@@ -112,49 +353,152 @@ export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Ten
             <div className="space-y-8">
                 {/* Hero Section */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative rounded-3xl overflow-hidden p-8 bg-gradient-to-br from-gold-500/20 to-purple-900/40 border border-white/10"
+                    transition={{ duration: 0.4 }}
+                    className="relative rounded-3xl overflow-hidden p-6 md:p-8 bg-gradient-to-br from-[rgba(212,168,67,0.12)] via-[rgba(14,14,46,0.6)] to-[rgba(6,6,26,0.9)] border border-[var(--glass-border)] shadow-2xl"
                 >
-                    <div className="relative z-10">
-                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                            Bonjour, <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 to-gold-500">{user?.firstName}</span>
-                        </h1>
-                        <p className="text-white/70">Prêt à impacter votre génération aujourd'hui ?</p>
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-[var(--gold-light)] font-medium">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                    Campus {tenant.name}
+                                </div>
+                                {onReplayVideo && (
+                                    <button
+                                        onClick={onReplayVideo}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/80 hover:text-[var(--gold-light)] transition-all cursor-pointer active:scale-95"
+                                        title="Voir ou revoir la vidéo d'accueil"
+                                    >
+                                        <PlayCircle size={14} className="text-[var(--gold)]" />
+                                        <span>Vidéo d'accueil</span>
+                                    </button>
+                                )}
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
+                                Bonjour, <span className="text-[var(--gold-light)]">{user?.firstName || "Bienvenue"}</span>
+                            </h1>
+                            <p className="text-sm md:text-base text-[var(--text-muted)] max-w-xl font-light">
+                                Accédez à tous les services, formulaires d'inscriptions et accompagnements de votre église locale.
+                            </p>
+                        </div>
+
+                        {/* Quick Requests Badge */}
+                        <div className="flex-shrink-0">
+                            <button
+                                onClick={() => setActiveTab('requests')}
+                                className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-white/[0.04] border border-[var(--glass-border)] hover:border-[var(--gold)]/40 hover:bg-white/[0.08] transition-all flex items-center justify-between gap-4 group"
+                            >
+                                <div className="flex items-center gap-3 text-left">
+                                    <div className="p-2.5 rounded-xl bg-[var(--gold-pale)] text-[var(--gold)]">
+                                        <ListTodo size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs uppercase tracking-wider font-semibold text-[var(--text-muted)]">Suivi Personnel</p>
+                                        <p className="text-sm font-bold text-white">
+                                            {pendingRequestsCount > 0 ? `${pendingRequestsCount} demande(s) enregistrée(s)` : "Aucune demande en cours"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <ChevronRight size={18} className="text-[var(--text-muted)] group-hover:text-[var(--gold)] group-hover:translate-x-1 transition-all" />
+                            </button>
+                        </div>
                     </div>
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
                 </motion.div>
 
-                {/* Modules Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {availableModules.map((module, i) => (
-                        <motion.button
-                            key={module.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: i * 0.05 + 0.2 }}
-                            onClick={() => setActiveModule(module)}
-                            className={`relative h-40 md:h-40 rounded-3xl p-4 md:p-6 flex flex-col items-start justify-between bg-gradient-to-br ${module.color} backdrop-blur-md border ${module.border} md:hover:scale-[1.02] active:scale-[0.98] hover:border-white/30 transition-all duration-300 group overflow-hidden`}
-                        >
-                            <div className="p-3 rounded-2xl bg-white/10 text-white group-hover:bg-white/20 transition-colors">
-                                <module.icon size={22} />
-                            </div>
-                            <div className="relative z-10 w-full text-left">
-                                <div className="flex justify-between items-start gap-2">
-                                    <div className="flex-1">
-                                        <span className="font-bold text-white text-sm md:text-lg tracking-wide leading-tight block">{module.label}</span>
-                                        {module.description && (
-                                            <span className="text-[10px] md:text-xs text-white/50 block mt-1 line-clamp-1">
-                                                {module.description}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <ChevronRight size={16} className="text-white/40 mt-1 flex-shrink-0 group-hover:translate-x-1 transition-transform" />
-                                </div>
-                            </div>
-                        </motion.button>
-                    ))}
+                {/* Filter & Search Bar */}
+                <div className="space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Categories Pills */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                            {CATEGORIES.map(cat => {
+                                const count = categoryCounts[cat.id];
+                                if (cat.id !== "all" && count === 0) return null;
+                                const isSelected = selectedCategory === cat.id;
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => setSelectedCategory(cat.id)}
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs md:text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+                                            isSelected
+                                                ? "bg-[var(--gold-pale)] border-[var(--gold)] text-[var(--gold-light)] shadow-[0_0_15px_rgba(212,168,67,0.2)]"
+                                                : "bg-white/[0.03] border-white/5 text-[var(--text-muted)] hover:text-white hover:bg-white/[0.06]"
+                                        }`}
+                                    >
+                                        <span>{cat.label}</span>
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? "bg-[var(--gold)] text-navy font-bold" : "bg-white/10 text-[var(--text-muted)]"}`}>
+                                            {count}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative w-full lg:w-72">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Rechercher un service..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-[var(--text)] focus:outline-none focus:border-[var(--gold)] transition-colors placeholder:text-[var(--text-muted)]/60"
+                            />
+                        </div>
+                    </div>
                 </div>
+
+                {/* Modules Grid */}
+                {filteredModules.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {filteredModules.map((module, i) => (
+                            <motion.button
+                                key={module.id}
+                                layout
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.03 }}
+                                onClick={() => setActiveModule(module)}
+                                className={`group relative rounded-2xl p-5 flex flex-col justify-between text-left bg-gradient-to-br ${module.color} bg-[rgba(14,14,46,0.35)] backdrop-blur-md border ${module.border} hover:bg-[rgba(14,14,46,0.6)] transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0`}
+                            >
+                                <div className="flex items-start justify-between w-full mb-4">
+                                    <div className="p-3 rounded-xl bg-white/[0.08] text-[var(--gold-light)] group-hover:scale-105 group-hover:bg-[var(--gold-pale)] transition-all">
+                                        <module.icon size={22} />
+                                    </div>
+                                    <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[var(--text-muted)]">
+                                        {module.badge}
+                                    </span>
+                                </div>
+
+                                <div className="space-y-1.5 w-full">
+                                    <h3 className="font-bold text-white text-base tracking-wide leading-tight group-hover:text-[var(--gold-light)] transition-colors">
+                                        {module.label}
+                                    </h3>
+                                    <p className="text-xs text-[var(--text-muted)] line-clamp-2 font-light leading-relaxed">
+                                        {module.description}
+                                    </p>
+                                </div>
+
+                                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-medium text-[var(--text-muted)] group-hover:text-[var(--gold-light)] transition-colors">
+                                    <span>Accéder au service</span>
+                                    <ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" />
+                                </div>
+                            </motion.button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-16 border border-dashed border-white/10 rounded-3xl space-y-3">
+                        <Filter className="w-8 h-8 mx-auto text-[var(--text-muted)] opacity-40" />
+                        <p className="text-sm text-[var(--text-muted)]">Aucun service ne correspond à votre recherche.</p>
+                        <button
+                            onClick={() => { setSearchQuery(""); setSelectedCategory("all"); }}
+                            className="text-xs text-[var(--gold-light)] hover:underline font-medium"
+                        >
+                            Réinitialiser les filtres
+                        </button>
+                    </div>
+                )}
             </div>
         );
     };
@@ -222,13 +566,15 @@ export default function MemberDashboard({ tenant, onReplayVideo }: { tenant: Ten
                     <GroupWhatsAppView
                         tenant={tenant}
                         moduleKey="church_group"
-                        title="Groupe de l'Église"
+                        title="Canal de l'Église"
                         description="Restez connecté à toute l'actualité et la vie de votre église locale."
                         icon={Church}
                     />
+                ) : activeModule?.id === 'schedule' ? (
+                    <CampusScheduleView tenant={tenant} />
                 ) : (
                     <div className="text-white/80 text-center py-10">
-                        <p>Module en développement...</p>
+                        <p>Service temporairement indisponible.</p>
                     </div>
                 )}
             </BottomSheet>
