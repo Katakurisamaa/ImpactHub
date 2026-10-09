@@ -143,12 +143,12 @@ const MODULES_DEF = [
     { 
         id: 'schedule', 
         category: 'community' as CategoryKey,
-        label: 'Agenda & Cultes', 
-        description: 'Horaires des célébrations et réunions de la semaine', 
+        label: 'Programmes et annonces', 
+        description: 'Cultes, programmes de la semaine et annonces officielles', 
         icon: Church, 
         color: 'from-amber-500/15 via-amber-950/20 to-transparent', 
         border: 'border-amber-500/25 hover:border-amber-400/50',
-        badge: 'Horaires'
+        badge: 'Programmes'
     },
 ];
 

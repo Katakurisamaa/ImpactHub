@@ -8,6 +8,7 @@ import ModuleToggles from "@/components/manager/ModuleToggles";
 import TeamManager from "@/components/manager/TeamManager";
 import CampusQRCode from "@/components/manager/CampusQRCode";
 import StarSettings from "@/components/manager/StarSettings";
+import ScheduleSettings from "@/components/manager/ScheduleSettings";
 import { GlassCard } from "@/components/ui/glass-card";
 import PremiumLoader from "@/components/ui/PremiumLoader";
 
@@ -172,7 +173,8 @@ export default function ManagerDashboard() {
                         <h2 className="text-3xl font-bold text-white mb-8 tracking-tight">Configuration des <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Modules</span></h2>
                         <ModuleToggles />
                         {tenantId && (
-                            <div className="mt-8">
+                            <div className="mt-8 space-y-8">
+                                <ScheduleSettings tenantId={tenantId} />
                                 <StarSettings tenantId={tenantId} />
                             </div>
                         )}

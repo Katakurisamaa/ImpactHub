@@ -109,7 +109,7 @@ export default function AccessPage() {
       </header>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 pt-32 pb-24">
-        <section className="flex flex-col items-center text-center space-y-6 py-10 reveal">
+        <section className="flex flex-col items-center text-center space-y-6 py-10 reveal visible">
           <div className="tag-badge">
             <Activity className="w-3 h-3 inline-block mr-2" />
             Accès Administratif

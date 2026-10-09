@@ -184,7 +184,7 @@ export default function Home() {
         </section>
 
         {/* Footer Link for Admins */}
-        <footer className="mt-40 pt-12 text-center flex flex-col items-center gap-6 reveal">
+        <footer className="mt-40 pt-12 text-center flex flex-col items-center gap-6">
           <div className="section-divider max-w-[200px]" />
           <div className="flex flex-col items-center gap-2">
             <p className="font-medium text-lg" style={{ color: "var(--gold-light)" }}>
